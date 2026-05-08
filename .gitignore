@@ -1,0 +1,26 @@
+# Python clutter
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Massive MCMC and Grid data
+data/chains/
+*.npz
+*.log
+tests/likelihood_test_outputs
+
+# Keep the main catalogs but ignore the massive stuff
+!data/UNCOVER_DR4_SPS_catalog.fits
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# Compiled binaries (C-extensions should be built locally)
+*.so
+pipeline/hmf_sigma.so
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.toc

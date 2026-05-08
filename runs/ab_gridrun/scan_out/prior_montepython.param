@@ -1,0 +1,13 @@
+# MontePython param entries for (a_exo, b_exo)
+# Source: CLASS-validated (182,790 pts)
+# Format: [mean, min, max, sigma, scale, role]
+data.parameters['a_exo'] = [-903.591083, -2219.618160, 412.435995, 146.225231, 1, 'cosmo']
+data.parameters['b_exo'] = [245.176534, -1413.242424, 1903.595493, 184.268773, 1, 'cosmo']
+
+# MontePython uses these as uniform-with-Gaussian-proposal by default.
+# For a hard Gaussian prior, either:
+#   (a) add a gaussian_prior block in your likelihood, or
+#   (b) post-process the chain with importance weights
+#         w_i = exp(-0.5 * (x_i - mu)^T Cov^-1 (x_i - mu))
+#       with mu = (-903.5911, 245.1765) and Cov^-1 =
+#         [[1.605869271105962e-05, 1.0480547138071603e-05], [1.0480547138071603e-05, 1.0112332242623457e-05]]

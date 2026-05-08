@@ -1,0 +1,50 @@
+# Cobaya prior block for (a_exo, b_exo)
+# Source      : CLASS-validated (182,790 pts)
+# Centroid    : (-903.5911, +245.1765)
+# Inflation   : sqrt(0.684) = 0.827x over sample cov
+# Correlation : rho_ab = -0.822
+
+params:
+  a_exo:
+    prior:
+      dist: norm
+      loc:   -903.591083
+      scale: 438.675692
+    ref:
+      dist: norm
+      loc:   -903.591083
+      scale: 146.225231
+    proposal: 146.225231
+    latex: a_\mathrm{exo}
+
+  b_exo:
+    prior:
+      dist: norm
+      loc:   245.176534
+      scale: 552.806320
+    ref:
+      dist: norm
+      loc:   245.176534
+      scale: 184.268773
+    proposal: 184.268773
+    latex: b_\mathrm{exo}
+
+# ---- Correlated version (RECOMMENDED if rho_ab is non-trivial) ----
+# Replace the two independent priors above with external priors that
+# together evaluate the full 2D Gaussian. Cobaya accepts additive
+# log-prior terms via the top-level `prior:` block:
+#
+# prior:
+#   exo_gauss_corr: |
+#     import numpy as np
+#     _mu  = np.array([-903.591083, 245.176534])
+#     _inv = np.array([[1.605869271105962e-05, 1.0480547138071603e-05], [1.0480547138071603e-05, 1.0112332242623457e-05]])
+#     def _p(a_exo, b_exo):
+#         d = np.array([a_exo, b_exo]) - _mu
+#         return -0.5 * float(d @ _inv @ d)
+#     return _p
+#
+# When using the correlated form, set the per-parameter priors to wide
+# uniforms so they do not double-count:
+#   a_exo: { prior: { min: -2658.29, max: 851.11 } }
+#   b_exo: { prior: { min: -1966.05, max: 2456.40 } }

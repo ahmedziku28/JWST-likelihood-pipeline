@@ -1,0 +1,141 @@
+Parameter autocorrelation lengths (effective number of samples N_eff = tot weight/weight length)
+
+                        Weight Length   Sample length           N_eff
+omega_b                        491.96          127.80             304
+omega_cdm                      498.94          129.61             300
+H0                            1010.07          262.39             148
+a_samp                         303.42           78.82             494
+s                              204.93           53.24             731
+Mb                             990.25          257.24             151
+Omega_Lambda                   123.93           32.19            1210
+Omega_m                         96.92           25.18            1547
+age                            416.34          108.16             360
+rs_drag                        705.17          183.19             212
+a_exo                          303.42           78.82             494
+b_exo                          303.28           78.78             494
+Omega_b                        143.62           37.31            1044
+Omega_cdm                      106.38           27.64            1409
+Omega_x0                       303.42           78.82             494
+sigma8                         482.63          125.38             310
+S8                             350.73           91.11             427
+z_reio                         107.49           27.92            1395
+chi2__BAO                      183.60           47.69             816
+chi2__H0                      1049.75          272.70             142
+chi2__SN                        14.30            3.71           10487
+minuslogprior                  128.56           33.40            1166
+minuslogprior__0               128.56           33.40            1166
+chi2                            15.15            3.94            9900
+chi2__H0.riess2020            1049.75          272.70             142
+chi2__sn.pantheonplus           14.30            3.71           10487
+chi2__bao.desi_dr2             183.60           47.69             816
+
+
+mean convergence stats using remaining chains
+param sqrt(var(chain mean)/mean(chain var))
+
+omega_b                   0.2170  \Omega_{\rm b} h^2
+omega_cdm                 0.1831  \Omega_{\rm c} h^2
+H0                        0.2926  H_0
+a_samp                    0.1015  a_{samp}
+s                         0.0978  \mathcal{S}
+Mb                        0.2814  M
+Omega_Lambda              0.0832  \Omega_\Lambda
+Omega_m                   0.0859  \Omega_m
+age                       0.1280  t_0 \,[\rm Gyr]
+rs_drag                   0.2187  r_{\rm s,drag} \,[\rm Mpc]
+a_exo                     0.1015  a_\mathrm{exo}
+b_exo                     0.0731  b_\mathrm{exo}
+Omega_b                   0.1309  \Omega_\mathrm{b}
+Omega_cdm                 0.0915  \Omega_\mathrm{c}
+Omega_x0                  0.1015  \Omega_\mathrm{x}
+sigma8                    0.1800  \sigma_8
+S8                        0.1496  S_8
+z_reio                    0.0856  z_\mathrm{re}
+chi2__BAO                 0.1188  \chi^2_\mathrm{BAO}
+chi2__H0                  0.2938  \chi^2_\mathrm{H0}
+chi2__SN                  0.0225  \chi^2_\mathrm{SN}
+minuslogprior             0.0807  -\log\pi
+minuslogprior__0          0.0807  -\log\pi_\mathrm{0}
+chi2                      0.0321  \chi^2
+chi2__H0.riess2020        0.2938  \chi^2_\mathrm{H0.riess2020}
+chi2__sn.pantheonplus     0.0225  \chi^2_\mathrm{sn.pantheonplus}
+chi2__bao.desi_dr2        0.1188  \chi^2_\mathrm{bao.desi\ dr2}
+
+var(mean)/mean(var) for eigenvalues of covariance of y of orthonormalized parameters
+  1      0.00020
+  2      0.00113
+  3      0.00401
+  4      0.00658
+  5      0.01163
+  6      0.08966
+
+Split tests: rms_n([delta(upper/lower quantile)]/sd) n={2,3,4}, limit=95%:
+i.e. mean sample splitting change in the quantiles in units of the st. dev.
+
+omega_b                  0.0344   0.0973   0.0706 upper
+omega_b                  0.1750   0.2610   0.2740 lower
+omega_cdm                0.1084   0.2034   0.2203 upper
+omega_cdm                0.0551   0.1320   0.2274 lower
+H0                       0.1605   0.2596   0.2847 upper
+H0                       0.1577   0.4492   0.5373 lower
+a_samp                   0.0287   0.0351   0.0408 upper
+a_samp                   0.0070   0.0099   0.0194 lower
+s                        0.0041   0.0106   0.0205 upper
+s                        0.0047   0.0062   0.0234 lower
+Mb                       0.1797   0.2727   0.3220 upper
+Mb                       0.1921   0.4743   0.5965 lower
+Omega_Lambda             0.0102   0.0270   0.0469 upper
+Omega_Lambda             0.0879   0.1408   0.1817 lower
+Omega_m                  0.0610   0.1127   0.1356 upper
+Omega_m                  0.0714   0.0908   0.0959 lower
+age                      0.1103   0.1150   0.1155 upper
+age                      0.0933   0.1602   0.2409 lower
+rs_drag                  0.0434   0.2126   0.4128 upper
+rs_drag                  0.0986   0.2095   0.2220 lower
+a_exo                    0.0287   0.0351   0.0408 upper
+a_exo                    0.0070   0.0099   0.0194 lower
+b_exo                    0.0390   0.0891   0.0706 upper
+b_exo                    0.0589   0.0947   0.1332 lower
+Omega_b                  0.0309   0.0255   0.1236 upper
+Omega_b                  0.0117   0.0851   0.1795 lower
+Omega_cdm                0.0282   0.1422   0.1416 upper
+Omega_cdm                0.0804   0.0885   0.0956 lower
+Omega_x0                 0.0287   0.0351   0.0408 upper
+Omega_x0                 0.0070   0.0099   0.0194 lower
+sigma8                   0.0880   0.2110   0.2112 upper
+sigma8                   0.0450   0.1399   0.2177 lower
+S8                       0.0529   0.1469   0.1976 upper
+S8                       0.0463   0.0668   0.1585 lower
+z_reio                   0.0376   0.0901   0.1358 upper
+z_reio                   0.0665   0.0948   0.0884 lower
+chi2__BAO                0.1685   0.3417   0.5973 upper
+chi2__BAO                0.0041   0.0026   0.0045 lower
+chi2__H0                 0.2016   0.5643   0.6752 upper
+chi2__H0                 0.1042   0.1658   0.1847 lower
+chi2__SN                 0.0056   0.0045   0.0060 upper
+chi2__SN                 0.0005   0.0006   0.0007 lower
+minuslogprior            0.0500   0.1106   0.1347 upper
+minuslogprior            0.0003   0.0003   0.0004 lower
+minuslogprior__0         0.0500   0.1106   0.1347 upper
+minuslogprior__0         0.0003   0.0003   0.0004 lower
+chi2                     0.0325   0.0575   0.0739 upper
+chi2                     0.0016   0.0034   0.0026 lower
+chi2__H0.riess2020       0.2016   0.5643   0.6752 upper
+chi2__H0.riess2020       0.1042   0.1658   0.1847 lower
+chi2__sn.pantheonplus    0.0056   0.0045   0.0060 upper
+chi2__sn.pantheonplus    0.0005   0.0006   0.0007 lower
+chi2__bao.desi_dr2       0.1685   0.3417   0.5973 upper
+chi2__bao.desi_dr2       0.0041   0.0026   0.0045 lower
+
+Raftery&Lewis statistics
+
+chain  markov_thin  indep_thin    nburn
+   0          93          94         558
+   1      Failed/not enough samples
+   2         109         109         327
+   3      Failed/not enough samples
+   4      Failed/not enough samples
+   5          97          97         388
+   6      Failed/not enough samples
+   7      Failed/not enough samples
+

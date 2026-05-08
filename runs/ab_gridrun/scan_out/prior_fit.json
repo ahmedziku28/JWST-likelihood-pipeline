@@ -1,0 +1,40 @@
+{
+  "source": "CLASS-validated (182,790 pts)",
+  "n_points": 182790,
+  "centroid": [
+    -903.5910827503021,
+    245.17653445286126
+  ],
+  "sample_cov": [
+    [
+      281306.7418679084,
+      -291549.8124139052
+    ],
+    [
+      -291549.8124139052,
+      446723.704959495
+    ]
+  ],
+  "sample_sigma_a": 530.3835799380562,
+  "sample_sigma_b": 668.3739260021257,
+  "sample_rho_ab": -0.8224380538426139,
+  "prior_mean": [
+    -903.5910827503021,
+    245.17653445286126
+  ],
+  "prior_cov": [
+    [
+      192436.36313112042,
+      -199443.4445472235
+    ],
+    [
+      -199443.4445472235,
+      305594.82697087794
+    ]
+  ],
+  "prior_sigma_a": 438.6756924324853,
+  "prior_sigma_b": 552.8063195829783,
+  "prior_rho_ab": -0.8224380538426139,
+  "prior_inflation": 0.8270913901288545,
+  "note": "Prior covariance is the sample covariance inflated so that the viable set is enclosed within the 3-sigma Mahalanobis ellipse. Uncorrelated Gaussian priors under-cover the viable region; use the correlated form for tight runs."
+}

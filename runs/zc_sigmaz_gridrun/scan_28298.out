@@ -1,0 +1,199 @@
+======================================================
+Job started on nut03.localdomain at Sun Apr  5 23:56:06 EET 2026
+======================================================
+Using: /home/lustre_p/ahmed.omar/workspace/venvs/exo_DE/bin/python
+Computing LCDM reference...
+LCDM sigma8(z):
+  z=  6.5: sigma8 = 0.139303
+  z=  7.5: sigma8 = 0.123013
+  z=  8.5: sigma8 = 0.110136
+  z=  9.5: sigma8 = 0.099702
+  z= 10.5: sigma8 = 0.091077
+  z= 11.5: sigma8 = 0.083829
+  z= 12.5: sigma8 = 0.077651
+  z= 13.5: sigma8 = 0.072324
+  z= 14.5: sigma8 = 0.067683
+  z= 15.5: sigma8 = 0.063604
+  z= 16.5: sigma8 = 0.059989
+  z= 17.5: sigma8 = 0.056765
+  z= 18.5: sigma8 = 0.053871
+  z= 20.0: sigma8 = 0.050046
+
+  [200/26334]  z_c=7.0 sz=8.5 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000000  [200 ok, 0 skip, 0 fail]  ETA 5.9h
+  [400/26334]  z_c=7.5 sz=4.5 Ox=-1e-04 a=-0.0 → ratio(z=8.5)=1.000000  [400 ok, 0 skip, 0 fail]  ETA 5.8h
+  → Checkpoint saved at 500/26334
+  [600/26334]  z_c=7.5 sz=10.0 Ox=-5e-04 a=-0.0 → ratio(z=8.5)=1.000000  [600 ok, 0 skip, 0 fail]  ETA 5.8h
+  [800/26334]  z_c=8.0 sz=6.0 Ox=-3e-03 a=-0.0 → ratio(z=8.5)=1.000002  [800 ok, 0 skip, 0 fail]  ETA 5.7h
+  [1000/26334]  z_c=8.0 sz=11.8 Ox=-1e-05 a=-0.0 → ratio(z=8.5)=1.000000  [1000 ok, 0 skip, 0 fail]  ETA 5.7h
+  → Checkpoint saved at 1000/26334
+  [1200/26334]  z_c=8.5 sz=7.8 Ox=-5e-05 a=-0.0 → ratio(z=8.5)=1.000000  [1200 ok, 0 skip, 0 fail]  ETA 5.6h
+  [1400/26334]  z_c=9.0 sz=3.8 Ox=-3e-04 a=-0.0 → ratio(z=8.5)=1.000003  [1400 ok, 0 skip, 0 fail]  ETA 5.6h
+  → Checkpoint saved at 1500/26334
+  [1600/26334]  z_c=9.0 sz=9.2 Ox=-1e-03 a=-0.0 → ratio(z=8.5)=1.000000  [1600 ok, 0 skip, 0 fail]  ETA 5.5h
+  [1800/26334]  z_c=9.5 sz=5.2 Ox=-5e-03 a=-0.0 → ratio(z=8.5)=1.000013  [1800 ok, 0 skip, 0 fail]  ETA 5.5h
+  [2000/26334]  z_c=9.5 sz=11.0 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000000  [2000 ok, 0 skip, 0 fail]  ETA 5.4h
+  → Checkpoint saved at 2000/26334
+  [2200/26334]  z_c=10.0 sz=7.0 Ox=-1e-04 a=-0.0 → ratio(z=8.5)=1.000000  [2200 ok, 0 skip, 0 fail]  ETA 5.4h
+  [2400/26334]  z_c=10.5 sz=3.0 Ox=-5e-04 a=-0.2 → ratio(z=8.5)=1.000131  [2400 ok, 0 skip, 0 fail]  ETA 5.4h
+  → Checkpoint saved at 2500/26334
+  [2600/26334]  z_c=10.5 sz=8.5 Ox=-3e-03 a=-0.0 → ratio(z=8.5)=1.000002  [2600 ok, 0 skip, 0 fail]  ETA 5.3h
+  [2800/26334]  z_c=11.0 sz=4.8 Ox=-1e-05 a=-0.0 → ratio(z=8.5)=1.000000  [2800 ok, 0 skip, 0 fail]  ETA 5.3h
+  [3000/26334]  z_c=11.0 sz=10.2 Ox=-5e-05 a=-0.0 → ratio(z=8.5)=1.000000  [3000 ok, 0 skip, 0 fail]  ETA 5.2h
+  → Checkpoint saved at 3000/26334
+  [3200/26334]  z_c=11.5 sz=6.2 Ox=-3e-04 a=-0.0 → ratio(z=8.5)=1.000001  [3200 ok, 0 skip, 0 fail]  ETA 5.2h
+  [3400/26334]  z_c=11.5 sz=11.8 Ox=-1e-03 a=-0.0 → ratio(z=8.5)=1.000000  [3400 ok, 0 skip, 0 fail]  ETA 5.1h
+  → Checkpoint saved at 3500/26334
+  [3600/26334]  z_c=12.0 sz=7.8 Ox=-5e-03 a=-0.0 → ratio(z=8.5)=1.000007  [3600 ok, 0 skip, 0 fail]  ETA 5.1h
+  [3800/26334]  z_c=12.5 sz=4.0 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000002  [3800 ok, 0 skip, 0 fail]  ETA 5.0h
+  [4000/26334]  z_c=12.5 sz=9.5 Ox=-1e-04 a=-0.0 → ratio(z=8.5)=1.000000  [4000 ok, 0 skip, 0 fail]  ETA 5.0h
+  → Checkpoint saved at 4000/26334
+  [4200/26334]  z_c=13.0 sz=5.5 Ox=-5e-04 a=-0.0 → ratio(z=8.5)=1.000004  [4200 ok, 0 skip, 0 fail]  ETA 5.0h
+  [4400/26334]  z_c=13.0 sz=11.0 Ox=-3e-03 a=-0.0 → ratio(z=8.5)=1.000002  [4400 ok, 0 skip, 0 fail]  ETA 4.9h
+  → Checkpoint saved at 4500/26334
+  [4600/26334]  z_c=13.5 sz=7.2 Ox=-1e-05 a=-0.0 → ratio(z=8.5)=1.000000  [4600 ok, 0 skip, 0 fail]  ETA 4.9h
+  [4800/26334]  z_c=14.0 sz=3.2 Ox=-5e-05 a=-0.5 → ratio(z=8.5)=1.000179  [4800 ok, 0 skip, 0 fail]  ETA 4.8h
+  [5000/26334]  z_c=14.0 sz=8.8 Ox=-3e-04 a=-0.0 → ratio(z=8.5)=1.000000  [5000 ok, 0 skip, 0 fail]  ETA 4.8h
+  → Checkpoint saved at 5000/26334
+  [5200/26334]  z_c=14.5 sz=4.8 Ox=-1e-03 a=-0.1 → ratio(z=8.5)=1.000046  [5200 ok, 0 skip, 0 fail]  ETA 4.7h
+  [5400/26334]  z_c=14.5 sz=10.2 Ox=-5e-03 a=-0.0 → ratio(z=8.5)=1.000005  [5400 ok, 0 skip, 0 fail]  ETA 4.7h
+  → Checkpoint saved at 5500/26334
+  [5600/26334]  z_c=15.0 sz=6.5 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000000  [5599 ok, 1 skip, 0 fail]  ETA 4.6h
+  [5800/26334]  z_c=15.0 sz=12.0 Ox=-1e-04 a=-0.0 → ratio(z=8.5)=1.000000  [5799 ok, 1 skip, 0 fail]  ETA 4.6h
+  [6000/26334]  z_c=15.5 sz=8.0 Ox=-5e-04 a=-0.0 → ratio(z=8.5)=1.000001  [5997 ok, 3 skip, 0 fail]  ETA 4.5h
+  → Checkpoint saved at 6000/26334
+  [6200/26334]  z_c=16.0 sz=4.0 Ox=-3e-03 a=-8.9 → ratio(z=8.5)=1.002332  [6194 ok, 6 skip, 0 fail]  ETA 4.5h
+  [6400/26334]  z_c=16.0 sz=9.8 Ox=-1e-05 a=-0.0 → ratio(z=8.5)=1.000000  [6394 ok, 6 skip, 0 fail]  ETA 4.5h
+  → Checkpoint saved at 6500/26334
+  [6600/26334]  z_c=16.5 sz=5.8 Ox=-5e-05 a=-0.0 → ratio(z=8.5)=1.000001  [6589 ok, 11 skip, 0 fail]  ETA 4.4h
+  [6800/26334]  z_c=16.5 sz=11.2 Ox=-3e-04 a=-0.0 → ratio(z=8.5)=1.000000  [6789 ok, 11 skip, 0 fail]  ETA 4.4h
+  [7000/26334]  z_c=17.0 sz=7.2 Ox=-1e-03 a=-0.0 → ratio(z=8.5)=1.000006  [6982 ok, 18 skip, 0 fail]  ETA 4.3h
+  → Checkpoint saved at 7000/26334
+  [7400/26334]  z_c=17.5 sz=9.0 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000000  [7373 ok, 27 skip, 0 fail]  ETA 4.2h
+  → Checkpoint saved at 7500/26334
+  [7600/26334]  z_c=18.0 sz=5.0 Ox=-1e-04 a=-0.1 → ratio(z=8.5)=1.000015  [7560 ok, 40 skip, 0 fail]  ETA 4.2h
+  [7800/26334]  z_c=18.0 sz=10.5 Ox=-5e-04 a=-0.0 → ratio(z=8.5)=1.000001  [7760 ok, 40 skip, 0 fail]  ETA 4.1h
+  [8000/26334]  z_c=18.5 sz=6.5 Ox=-3e-03 a=-0.2 → ratio(z=8.5)=1.000053  [7945 ok, 55 skip, 0 fail]  ETA 4.1h
+  → Checkpoint saved at 8000/26334
+  [8200/26334]  z_c=18.5 sz=12.2 Ox=-1e-05 a=-0.0 → ratio(z=8.5)=1.000000  [8145 ok, 55 skip, 0 fail]  ETA 4.0h
+  [8400/26334]  z_c=19.0 sz=8.2 Ox=-5e-05 a=-0.0 → ratio(z=8.5)=1.000000  [8327 ok, 73 skip, 0 fail]  ETA 4.0h
+  → Checkpoint saved at 8500/26334
+  [8600/26334]  z_c=19.5 sz=4.2 Ox=-3e-04 a=-11.2 → ratio(z=8.5)=1.001114  [8506 ok, 94 skip, 0 fail]  ETA 3.9h
+  [8800/26334]  z_c=19.5 sz=9.8 Ox=-1e-03 a=-0.0 → ratio(z=8.5)=1.000002  [8706 ok, 94 skip, 0 fail]  ETA 3.9h
+  [9000/26334]  z_c=20.0 sz=5.8 Ox=-5e-03 a=-2.1 → ratio(z=8.5)=1.000393  [8882 ok, 118 skip, 0 fail]  ETA 3.8h
+  → Checkpoint saved at 9000/26334
+  [9200/26334]  z_c=20.0 sz=11.5 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000000  [9082 ok, 118 skip, 0 fail]  ETA 3.8h
+  [9400/26334]  z_c=20.5 sz=7.5 Ox=-1e-04 a=-0.0 → ratio(z=8.5)=1.000001  [9255 ok, 145 skip, 0 fail]  ETA 3.7h
+  → Checkpoint saved at 9500/26334
+  [9800/26334]  z_c=21.0 sz=9.0 Ox=-3e-03 a=-0.0 → ratio(z=8.5)=1.000014  [9624 ok, 175 skip, 1 fail]  ETA 3.6h
+  [10000/26334]  z_c=21.5 sz=5.2 Ox=-1e-05 a=-0.0 → ratio(z=8.5)=1.000004  [9791 ok, 208 skip, 1 fail]  ETA 3.6h
+  → Checkpoint saved at 10000/26334
+  [10200/26334]  z_c=21.5 sz=10.8 Ox=-5e-05 a=-0.0 → ratio(z=8.5)=1.000000  [9991 ok, 208 skip, 1 fail]  ETA 3.5h
+  [10400/26334]  z_c=22.0 sz=6.8 Ox=-3e-04 a=-0.1 → ratio(z=8.5)=1.000010  [10155 ok, 243 skip, 2 fail]  ETA 3.5h
+  → Checkpoint saved at 10500/26334
+  [10600/26334]  z_c=22.0 sz=12.2 Ox=-1e-03 a=-0.0 → ratio(z=8.5)=1.000001  [10355 ok, 243 skip, 2 fail]  ETA 3.4h
+  [10800/26334]  z_c=22.5 sz=8.2 Ox=-5e-03 a=-0.2 → ratio(z=8.5)=1.000047  [10516 ok, 282 skip, 2 fail]  ETA 3.4h
+  [11000/26334]  z_c=23.0 sz=4.5 Ox=-3e-05 a=-14.1 → ratio(z=8.5)=1.000492  [10674 ok, 324 skip, 2 fail]  ETA 3.3h
+  → Checkpoint saved at 11000/26334
+  [11200/26334]  z_c=23.0 sz=10.0 Ox=-1e-04 a=-0.0 → ratio(z=8.5)=1.000000  [10874 ok, 324 skip, 2 fail]  ETA 3.3h
+  [11400/26334]  z_c=23.5 sz=6.0 Ox=-5e-04 a=-1.1 → ratio(z=8.5)=1.000089  [11030 ok, 368 skip, 2 fail]  ETA 3.2h
+  → Checkpoint saved at 11500/26334
+  [11600/26334]  z_c=23.5 sz=11.5 Ox=-3e-03 a=-0.0 → ratio(z=8.5)=1.000007  [11230 ok, 368 skip, 2 fail]  ETA 3.2h
+  [11800/26334]  z_c=24.0 sz=7.8 Ox=-1e-05 a=-0.0 → ratio(z=8.5)=1.000000  [11383 ok, 415 skip, 2 fail]  ETA 3.1h
+  [12000/26334]  z_c=24.5 sz=3.8 Ox=-5e-05 → SKIP (E2=-87711)  [11553 ok, 445 skip, 2 fail]  ETA 3.1h
+  [12200/26334]  z_c=24.5 sz=9.2 Ox=-3e-04 a=-0.0 → ratio(z=8.5)=1.000002  [11733 ok, 465 skip, 2 fail]  ETA 3.0h
+  [12400/26334]  z_c=25.0 sz=5.2 Ox=-1e-03 a=-83.9 → ratio(z=8.5)=1.002645  [11880 ok, 518 skip, 2 fail]  ETA 3.0h
+  → Checkpoint saved at 12500/26334
+  [12600/26334]  z_c=25.0 sz=10.8 Ox=-5e-03 a=-0.1 → ratio(z=8.5)=1.000017  [12080 ok, 518 skip, 2 fail]  ETA 2.9h
+  [12800/26334]  z_c=25.5 sz=7.0 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000002  [12224 ok, 574 skip, 2 fail]  ETA 2.9h
+  [13000/26334]  z_c=26.0 sz=3.0 Ox=-1e-04 → SKIP (E2=-2042539863681)  [12420 ok, 578 skip, 2 fail]  ETA 2.9h
+  [13200/26334]  z_c=26.0 sz=8.5 Ox=-5e-04 a=-0.1 → ratio(z=8.5)=1.000007  [12566 ok, 632 skip, 2 fail]  ETA 2.8h
+  → Checkpoint saved at 13500/26334
+  [13600/26334]  z_c=26.5 sz=10.2 Ox=-1e-05 a=-0.0 → ratio(z=8.5)=1.000000  [12904 ok, 693 skip, 3 fail]  ETA 2.7h
+  [13800/26334]  z_c=27.0 sz=6.2 Ox=-5e-05 a=-0.6 → ratio(z=8.5)=1.000019  [13040 ok, 757 skip, 3 fail]  ETA 2.7h
+  [14000/26334]  z_c=27.0 sz=11.8 Ox=-3e-04 a=-0.0 → ratio(z=8.5)=1.000001  [13240 ok, 757 skip, 3 fail]  ETA 2.6h
+  → Checkpoint saved at 14000/26334
+  [14200/26334]  z_c=27.5 sz=7.8 Ox=-1e-03 a=-0.5 → ratio(z=8.5)=1.000040  [13373 ok, 823 skip, 4 fail]  ETA 2.6h
+  → Checkpoint saved at 14500/26334
+  [14600/26334]  z_c=28.0 sz=9.5 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000000  [13703 ok, 893 skip, 4 fail]  ETA 2.5h
+  [14800/26334]  z_c=28.5 sz=5.5 Ox=-1e-04 a=-67.7 → ratio(z=8.5)=1.000811  [13831 ok, 965 skip, 4 fail]  ETA 2.4h
+  [15000/26334]  z_c=28.5 sz=11.0 Ox=-5e-04 a=-0.0 → ratio(z=8.5)=1.000002  [14031 ok, 965 skip, 4 fail]  ETA 2.4h
+  → Checkpoint saved at 15000/26334
+  [15200/26334]  z_c=29.0 sz=7.0 Ox=-3e-03 a=-16.0 → ratio(z=8.5)=1.000511  [14156 ok, 1040 skip, 4 fail]  ETA 2.3h
+  → Checkpoint saved at 15500/26334
+  [15600/26334]  z_c=29.5 sz=8.8 Ox=-5e-05 a=-0.0 → ratio(z=8.5)=1.000001  [14478 ok, 1118 skip, 4 fail]  ETA 2.2h
+  [16000/26334]  z_c=30.0 sz=10.2 Ox=-1e-03 a=-0.1 → ratio(z=8.5)=1.000008  [14797 ok, 1199 skip, 4 fail]  ETA 2.1h
+  → Checkpoint saved at 16000/26334
+  [16200/26334]  z_c=30.5 sz=6.2 Ox=-5e-03 a=-741.7 → ratio(z=8.5)=1.008679  [14913 ok, 1283 skip, 4 fail]  ETA 2.1h
+  [16400/26334]  z_c=30.5 sz=12.0 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000000  [15113 ok, 1283 skip, 4 fail]  ETA 2.1h
+  → Checkpoint saved at 16500/26334
+  [16600/26334]  z_c=31.0 sz=8.0 Ox=-1e-04 a=-0.2 → ratio(z=8.5)=1.000006  [15226 ok, 1370 skip, 4 fail]  ETA 2.0h
+  [17000/26334]  z_c=31.5 sz=9.5 Ox=-3e-03 a=-0.7 → ratio(z=8.5)=1.000048  [15536 ok, 1460 skip, 4 fail]  ETA 1.9h
+  → Checkpoint saved at 17000/26334
+  [17200/26334]  z_c=32.0 sz=5.8 Ox=-1e-05 a=-53.1 → ratio(z=8.5)=1.000260  [15646 ok, 1550 skip, 4 fail]  ETA 1.9h
+  [17400/26334]  z_c=32.0 sz=11.2 Ox=-5e-05 a=-0.0 → ratio(z=8.5)=1.000000  [15844 ok, 1552 skip, 4 fail]  ETA 1.8h
+  [17600/26334]  z_c=32.5 sz=7.2 Ox=-3e-04 a=-6.9 → ratio(z=8.5)=1.000094  [15948 ok, 1647 skip, 5 fail]  ETA 1.8h
+  [18000/26334]  z_c=33.0 sz=8.8 Ox=-5e-03 a=-6.1 → ratio(z=8.5)=1.000200  [16249 ok, 1746 skip, 5 fail]  ETA 1.7h
+  → Checkpoint saved at 18000/26334
+  [18400/26334]  z_c=33.5 sz=10.5 Ox=-1e-04 a=-0.0 → ratio(z=8.5)=1.000001  [16548 ok, 1846 skip, 6 fail]  ETA 1.6h
+  [18600/26334]  z_c=34.0 sz=6.5 Ox=-5e-04 a=-436.8 → ratio(z=8.5)=1.002107  [16644 ok, 1949 skip, 7 fail]  ETA 1.6h
+  [18800/26334]  z_c=34.0 sz=12.0 Ox=-3e-03 a=-0.2 → ratio(z=8.5)=1.000016  [16844 ok, 1949 skip, 7 fail]  ETA 1.5h
+  [19000/26334]  z_c=34.5 sz=8.2 Ox=-1e-05 a=-0.1 → ratio(z=8.5)=1.000001  [16937 ok, 2055 skip, 8 fail]  ETA 1.5h
+  → Checkpoint saved at 19000/26334
+  [19400/26334]  z_c=35.0 sz=9.8 Ox=-3e-04 a=-0.2 → ratio(z=8.5)=1.000007  [17229 ok, 2163 skip, 8 fail]  ETA 1.4h
+  [19800/26334]  z_c=35.5 sz=11.2 Ox=-5e-03 a=-0.7 → ratio(z=8.5)=1.000044  [17518 ok, 2274 skip, 8 fail]  ETA 1.3h
+  [20000/26334]  z_c=36.0 sz=7.5 Ox=-3e-05 a=-3.0 → ratio(z=8.5)=1.000018  [17602 ok, 2389 skip, 9 fail]  ETA 1.2h
+  → Checkpoint saved at 20000/26334
+  [20400/26334]  z_c=36.5 sz=9.0 Ox=-5e-04 a=-1.9 → ratio(z=8.5)=1.000029  [17885 ok, 2506 skip, 9 fail]  ETA 1.2h
+  → Checkpoint saved at 20500/26334
+  [20800/26334]  z_c=37.0 sz=10.8 Ox=-1e-05 a=-0.0 → ratio(z=8.5)=1.000000  [18165 ok, 2626 skip, 9 fail]  ETA 1.1h
+  [21000/26334]  z_c=37.5 sz=6.8 Ox=-5e-05 a=-251.8 → ratio(z=8.5)=1.000539  [18243 ok, 2748 skip, 9 fail]  ETA 1.0h
+  → Checkpoint saved at 21000/26334
+  [21200/26334]  z_c=37.5 sz=12.2 Ox=-3e-04 a=-0.0 → ratio(z=8.5)=1.000002  [18442 ok, 2749 skip, 9 fail]  ETA 1.0h
+  [21400/26334]  z_c=38.0 sz=8.2 Ox=-1e-03 a=-40.5 → ratio(z=8.5)=1.000241  [18517 ok, 2874 skip, 9 fail]  ETA 1.0h
+  → Checkpoint saved at 21500/26334
+  [21800/26334]  z_c=38.5 sz=10.0 Ox=-3e-05 a=-0.0 → ratio(z=8.5)=1.000001  [18788 ok, 3003 skip, 9 fail]  ETA 0.9h
+  [22000/26334]  z_c=39.0 sz=6.0 Ox=-1e-04 → SKIP (E2=-129526)  [18877 ok, 3114 skip, 9 fail]  ETA 0.8h
+  [22200/26334]  z_c=39.0 sz=11.5 Ox=-5e-04 a=-0.2 → ratio(z=8.5)=1.000005  [19057 ok, 3133 skip, 10 fail]  ETA 0.8h
+  [22400/26334]  z_c=39.5 sz=7.5 Ox=-3e-03 a=-3164.5 → ratio(z=8.5)=1.007046  [19123 ok, 3267 skip, 10 fail]  ETA 0.8h
+  → Checkpoint saved at 22500/26334
+  [22800/26334]  z_c=40.0 sz=9.2 Ox=-5e-05 a=-0.6 → ratio(z=8.5)=1.000004  [19386 ok, 3404 skip, 10 fail]  ETA 0.7h
+  [23000/26334]  z_c=40.5 sz=5.2 Ox=-3e-04 → SKIP (E2=-2509539460)  [19500 ok, 3490 skip, 10 fail]  ETA 0.6h
+  [23200/26334]  z_c=40.5 sz=10.8 Ox=-1e-03 a=-1.2 → ratio(z=8.5)=1.000021  [19647 ok, 3542 skip, 11 fail]  ETA 0.6h
+  → Checkpoint saved at 23500/26334
+  [23800/26334]  z_c=41.5 sz=8.5 Ox=-1e-04 a=-15.0 → ratio(z=8.5)=1.000041  [19959 ok, 3829 skip, 12 fail]  ETA 0.5h
+  [24000/26334]  z_c=42.0 sz=4.5 Ox=-5e-04 → SKIP (E2=-4120096976610920)  [20099 ok, 3889 skip, 12 fail]  ETA 0.4h
+  [24200/26334]  z_c=42.0 sz=10.0 Ox=-3e-03 a=-20.3 → ratio(z=8.5)=1.000154  [20212 ok, 3976 skip, 12 fail]  ETA 0.4h
+  → Checkpoint saved at 24500/26334
+  [24600/26334]  z_c=42.5 sz=11.8 Ox=-5e-05 a=-0.0 → ratio(z=8.5)=1.000001  [20462 ok, 4126 skip, 12 fail]  ETA 0.3h
+  [24800/26334]  z_c=43.0 sz=7.8 Ox=-3e-04 a=-1451.8 → ratio(z=8.5)=1.001501  [20510 ok, 4278 skip, 12 fail]  ETA 0.3h
+  [25000/26334]  z_c=43.5 sz=3.8 Ox=-1e-03 → SKIP (E2=-165703904721477753731284992)  [20675 ok, 4313 skip, 12 fail]  ETA 0.2h
+  [25200/26334]  z_c=43.5 sz=9.2 Ox=-5e-03 a=-317.2 → ratio(z=8.5)=1.000906  [20754 ok, 4434 skip, 12 fail]  ETA 0.2h
+  → Checkpoint saved at 25500/26334
+  [25600/26334]  z_c=44.0 sz=11.0 Ox=-1e-04 a=-0.3 → ratio(z=8.5)=1.000003  [20995 ok, 4593 skip, 12 fail]  ETA 0.1h
+  [26000/26334]  z_c=45.0 sz=3.0 Ox=-3e-03 → SKIP (E2=-21639661790555714355206996492063524638081155072)  [21225 ok, 4762 skip, 13 fail]  ETA 0.1h
+  [26200/26334]  z_c=45.0 sz=8.8 Ox=-1e-05 a=-5.5 → ratio(z=8.5)=1.000007  [21269 ok, 4918 skip, 13 fail]  ETA 0.0h
+
+============================================================
+SCAN COMPLETE
+============================================================
+Total runs:   26334
+Succeeded:    21403
+E2 skipped:   4918
+CLASS failed: 13
+Total time:   4.8 hours
+Saved:        runs/grid_scan_v2_results.npz
+
+============================================================
+BEST (z_c, sigma_z) AT EACH Omega_x0
+Criterion: highest ratio at z=8.5, subject to all ratios > 1
+============================================================
+  Omega_x0 = -1e-05:  z_c=18.5  sigma_z=3.00  ratio(z=8.5)=1.162741  ratio(z=6.5)=1.090901  min=1.066956
+  Omega_x0 = -3e-05:  z_c=19.5  sigma_z=3.25  ratio(z=8.5)=1.138237  ratio(z=6.5)=1.077386  min=1.077386
+  Omega_x0 = -5e-05:  z_c=17.5  sigma_z=3.00  ratio(z=8.5)=1.143612  ratio(z=6.5)=1.082707  min=1.024470
+  Omega_x0 = -1e-04:  z_c=17.0  sigma_z=3.00  ratio(z=8.5)=1.125786  ratio(z=6.5)=1.074291  min=1.013919
+  Omega_x0 = -3e-04:  z_c=16.5  sigma_z=3.00  ratio(z=8.5)=1.202573  ratio(z=6.5)=1.120676  min=1.012692
+  Omega_x0 = -5e-04:  z_c=16.0  sigma_z=3.00  ratio(z=8.5)=1.149174  ratio(z=6.5)=1.093093  min=1.006156
+  Omega_x0 = -1e-03:  z_c=15.5  sigma_z=3.00  ratio(z=8.5)=1.148220  ratio(z=6.5)=1.096336  min=1.003691
+  Omega_x0 = -3e-03:  z_c=15.0  sigma_z=3.00  ratio(z=8.5)=1.267364  ratio(z=6.5)=1.173701  min=1.003362
+  Omega_x0 = -5e-03:  z_c=17.5  sigma_z=3.50  ratio(z=8.5)=1.234436  ratio(z=6.5)=1.145597  min=1.035597
+Job finished at Mon Apr  6 04:44:19 EET 2026
