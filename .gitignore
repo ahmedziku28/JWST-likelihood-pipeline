@@ -53,3 +53,5 @@ runs/**/*.log
 tests/likelihood_test_outputs/
 runs/runs/**/outputs/
 *.so
+auto_commit.sh
+.auto_commit.log
