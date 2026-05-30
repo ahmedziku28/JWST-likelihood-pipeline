@@ -1,27 +1,46 @@
-# Python clutter
+
+# ── Chain outputs (huge, regenerable) ──
+
+runs/**/outputs/
+
+# ── Runtime artifacts per run ──
+
+runs/**/*.err
+
+runs/**/*.covmat
+
+runs/**/.health.json
+
+runs/**/*.json
+
+runs/**/*.log
+
+# ── Run manager state (changes every minute) ──
+
+runs/.run_manager_state.json
+
+runs/.run_manager_control.json
+
+runs/run_manager.log
+
+runs/.alerts
+
+# ── Python ──
+
 __pycache__/
+
 *.pyc
+
+*.pyo
+
 *.egg-info/
 
-# Massive MCMC and Grid data
-data/chains/
-*.npz
-*.log
-tests/likelihood_test_outputs
+# ── OS ──
 
-# Keep the main catalogs but ignore the massive stuff
-!data/UNCOVER_DR4_SPS_catalog.fits
+.DS_Store
 
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-*/.ipynb_checkpoints/
+*.swp
 
-# Compiled binaries (C-extensions should be built locally)
-*.so
-pipeline/hmf_sigma.so
+*~
 
-# LaTeX auxiliary files
-*.aux
-*.log
-*.toc
-runs/**/outputs/
+runs/**/*.log
