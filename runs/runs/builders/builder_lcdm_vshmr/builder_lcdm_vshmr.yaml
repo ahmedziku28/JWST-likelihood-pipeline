@@ -1,0 +1,87 @@
+# ── Theory (cosmology FIXED at Planck 2018) ────────────────
+theory:
+  classy:
+    path: global
+    stop_at_error: False
+    extra_args:
+      use_exotic_DE: False
+      N_ncdm: 1
+      N_ur: 2.0328
+      P_k_max_1/Mpc: 150.0
+      z_max_pk: 16.0
+
+# ── Likelihood (UVLF only) ─────────────────────────────────
+likelihood:
+  jwst_likelihood_uvlf.UVLFLikelihood:
+    python_path: "/home/lustre_p/ahmed.omar/workspace/exo_de_project/likelihood/"
+    integrate_bin: True
+    use_volume_correction: False
+    n_gl: 2
+    z_min_donnan: 9.0
+    z_min_finkelstein: 8.9
+    use_donnan_bins: True
+    use_finkelstein_bins: True
+    vary_SHMR: True
+    vary_beta: False
+
+# ── Parameters ─────────────────────────────────────────────
+params:
+  # ── Cosmology FIXED at Planck 2018 ──
+  H0:
+    value: 67.36
+    latex: H_0
+  omega_b:
+    value: 0.02237
+    latex: \Omega_{\rm b} h^2
+  omega_cdm:
+    value: 0.12
+    latex: \Omega_{\rm c} h^2
+  tau_reio:
+    value: 0.0544
+    latex: \tau_{\rm reio}
+  logA:
+    value: 3.044
+    drop: true
+    latex: \log(10^{10} A_{\rm s})
+  A_s:
+    value: 'lambda logA: 1e-10*np.exp(logA)'
+    latex: A_{\rm s}
+  n_s:
+    value: 0.9649
+    latex: n_{\rm s}
+
+  # ── SHMR sampled (full Stefanon DPL) ──
+  shmr_log_Mc:
+    prior: {dist: norm, loc: 11.5, scale: 0.2}
+    ref: 11.5
+    proposal: 0.04
+    latex: \log_{10}(M_c)
+  shmr_N:
+    prior: {dist: norm, loc: 0.0297, scale: 0.0065}
+    ref: 0.0297
+    proposal: 0.0013
+    latex: N_{\rm SHMR}
+  shmr_beta:
+    prior: {dist: norm, loc: 1.35, scale: 0.26}
+    ref: 1.35
+    proposal: 0.05
+    latex: \beta_{\rm SHMR}
+
+  # ── Neutrino mass (fixed) ──
+  m_ncdm:
+    value: 0.06
+    renames: mnu
+
+# ── Sampler (covmat-building: fast exploration, capped) ────
+sampler:
+  mcmc:
+    covmat: auto
+    drag: false
+    oversample_power: 0
+    proposal_scale: 2.8
+    Rminus1_stop: 0.05
+    Rminus1_cl_stop: 0.2
+    learn_every: '5d'
+    max_samples: 800
+
+output: outputs/builder_lcdm_vshmr

@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=test_likelihood
-#SBATCH --nodelist=nut03
+#SBATCH --nodelist=nut04
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8        # request 8 cores for threading
 #SBATCH --mem=4G
-#SBATCH --time=02:00:00
+#SBATCH --time=10:00:00
 #SBATCH --output=test_likelihood.log
 
 
@@ -43,7 +43,7 @@ echo "============================================"
 # ── Run ───────────────────────────────────────────────────────────────────────
 # Remove --skip_bobyqa to run the full minimisation suite.
 # Add --skip_bobyqa during development to run only the 13 validation tests.
-python3.8 test_likelihood.py \
+python3.8 test_likelihood_differential.py \
     --output_dir $OUTPUT_DIR
  
 echo "============================================"

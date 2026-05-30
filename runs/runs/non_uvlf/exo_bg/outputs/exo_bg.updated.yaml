@@ -1,0 +1,280 @@
+theory:
+  classy:
+    path: global
+    speed: 0.2
+    stop_at_error: false
+    extra_args:
+      z_c_exo: 16.0
+      sigma_z_exo: 3.25
+      N_ncdm: 1
+      N_ur: 2.0328
+      P_k_max_1/Mpc: 150.0
+      z_max_pk: 16.0
+    ignore_obsolete: false
+    use_renames: false
+    renames:
+      As: A_s
+      ns: n_s
+      nrun: alpha_s
+      nrunrun: beta_s
+      nt: n_t
+      ntrun: alpha_t
+      rdrag: rs_drag
+      omegak: Omega_k
+      omegal: Omega_Lambda
+      w: w0_fld
+      wa: wa_fld
+      omegabh2: omega_b
+      omegab: Omega_b
+      omegach2: omega_cdm
+      omegac: Omega_cdm
+      omegam: Omega_m
+      omegan: Omega_nu
+      tau: tau_reio
+      zrei: z_reio
+      deltazrei: reionization_width
+      helium_redshift: helium_fullreio_redshift
+      helium_delta_redshift: helium_fullreio_width
+      yhe: YHe
+      yheused: YHe
+    version: v3.3.4
+    input_params:
+    - a_exo
+    - b_exo
+    - H0
+    - omega_b
+    - omega_cdm
+    - tau_reio
+    - A_s
+    - n_s
+    - m_ncdm
+    output_params:
+    - Omega_m
+    - Omega_Lambda
+    - sigma8
+    - age
+    - rs_drag
+likelihood:
+  H0.riess2020:
+    H0_mean: 73.2
+    H0_std: 1.3
+    aliases:
+    - Riess18
+    speed: 4500
+    type: H0
+    stop_at_error: false
+    version: null
+    input_params:
+    - H0
+    output_params: []
+  sn.pantheonplus:
+    path: null
+    dataset_file: PantheonPlus/config.dataset
+    dataset_params: null
+    aliases:
+    - PantheonPlus
+    use_abs_mag: false
+    speed: 100
+    type: SN
+    stop_at_error: false
+    version: null
+    input_params: []
+    output_params: []
+  bao.desi_dr2:
+    path: null
+    measurements_file: bao_data/desi_bao_dr2/desi_gaussian_bao_ALL_GCcomb_mean.txt
+    cov_file: bao_data/desi_bao_dr2/desi_gaussian_bao_ALL_GCcomb_cov.txt
+    rs_fid: 1
+    aliases:
+    - BAO
+    speed: 2000
+    type: BAO
+    rs_rescale: null
+    prob_dist: null
+    invcov_file: null
+    redshift: null
+    observable_1: null
+    observable_2: null
+    observable_3: null
+    grid_file: null
+    stop_at_error: false
+    version: null
+    input_params: []
+    output_params: []
+prior:
+  h2_positivity: 'lambda a_samp, s: 0.0 if s >= (-0.07202 * a_samp - 1381.5969) else
+    -1e500'
+params:
+  a_samp:
+    prior:
+      min: -350.0
+      max: -1.0e-10
+    ref:
+      min: -75.0
+      max: -5.0
+    proposal: 6.0
+    drop: true
+    latex: a_{\rm samp}
+  s:
+    prior:
+      min: -1000.0
+      max: -1.0e-10
+    ref:
+      min: -250.0
+      max: -50.0
+    proposal: 18.0
+    drop: true
+    latex: \mathcal{S}
+  a_exo:
+    value: 'lambda a_samp: a_samp'
+    latex: a_{\rm exo}
+    derived: true
+  b_exo:
+    value: 'lambda a_samp, s: s - a_samp'
+    latex: b_{\rm exo}
+    derived: true
+  Omega_x0:
+    derived: 'lambda a_exo: a_exo * 5.45846e-6'
+    latex: \Omega_{\mathrm{x},0}
+  H0:
+    prior:
+      min: 60.0
+      max: 80.0
+    ref:
+      dist: norm
+      loc: 67.4
+      scale: 4.0
+    proposal: 0.5
+    latex: H_0
+  omega_b:
+    prior:
+      dist: norm
+      loc: 0.02235
+      scale: 0.00037
+    ref:
+      dist: norm
+      loc: 0.02237
+      scale: 0.0001
+    proposal: 8.0e-05
+    latex: \Omega_{\rm b} h^2
+    renames:
+    - omegabh2
+  omega_cdm:
+    prior:
+      min: 0.05
+      max: 0.18
+    ref:
+      dist: norm
+      loc: 0.12
+      scale: 0.002
+    proposal: 0.001
+    latex: \Omega_{\rm c} h^2
+    renames:
+    - omegach2
+  tau_reio:
+    value: 0.0544
+    latex: \tau_{\rm reio}
+    renames:
+    - tau
+  logA:
+    value: 3.044
+    drop: true
+    latex: \log(10^{10} A_{\rm s})
+  A_s:
+    value: 'lambda logA: 1e-10*np.exp(logA)'
+    latex: A_{\rm s}
+    derived: true
+    renames:
+    - As
+  n_s:
+    value: 0.9649
+    latex: n_{\rm s}
+    renames:
+    - ns
+  m_ncdm:
+    value: 0.06
+    renames: mnu
+  Omega_m:
+    derived: true
+    latex: \Omega_m
+    renames:
+    - omegam
+  Omega_Lambda:
+    derived: true
+    latex: \Omega_\Lambda
+    renames:
+    - omegal
+  sigma8:
+    latex: \sigma_8
+    derived: true
+  Omega_b:
+    derived: 'lambda omega_b, H0: omega_b * (100/H0)**2'
+    latex: \Omega_{\rm b}
+    renames:
+    - omegab
+  Omega_cdm:
+    derived: 'lambda omega_cdm, H0: omega_cdm * (100/H0)**2'
+    latex: \Omega_{\rm c}
+    renames:
+    - omegac
+  S8:
+    derived: 'lambda sigma8, Omega_m: sigma8*(Omega_m/0.3)**0.5'
+    latex: S_8
+  age:
+    derived: true
+    latex: t_0 \,[\rm Gyr]
+  rs_drag:
+    derived: true
+    latex: r_{\rm s,drag} \,[\rm Mpc]
+    renames:
+    - rdrag
+  chi2__BAO:
+    latex: \chi^2_\mathrm{BAO}
+    derived: true
+  chi2__H0:
+    latex: \chi^2_\mathrm{H0}
+    derived: true
+  chi2__SN:
+    latex: \chi^2_\mathrm{SN}
+    derived: true
+sampler:
+  mcmc:
+    burn_in: 0
+    max_tries: 40d
+    covmat: exo_bg.covmat
+    covmat_params: null
+    proposal_scale: 1.9
+    output_every: 60s
+    learn_every: 11d
+    temperature: 1
+    learn_proposal: true
+    learn_proposal_Rminus1_max: 2.0
+    learn_proposal_Rminus1_max_early: 30.0
+    learn_proposal_Rminus1_min: 0.0
+    max_samples: .inf
+    Rminus1_stop: 0.02
+    Rminus1_cl_stop: 0.2
+    Rminus1_cl_level: 0.95
+    Rminus1_single_split: 4
+    measure_speeds: true
+    oversample_power: 0
+    oversample_thin: true
+    drag: false
+    blocking:
+    - - 1
+      - - H0
+    - - 1
+      - - a_samp
+        - s
+        - omega_b
+        - omega_cdm
+    callback_function: null
+    callback_every: null
+    seed: null
+    check_every: null
+    oversample: null
+    drag_limits: null
+    fallback_covmat_scale: 4
+    version: 3.5.7
+output: exo_bg
+version: 3.5.7

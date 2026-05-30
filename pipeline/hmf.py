@@ -53,14 +53,14 @@ q_SMT   = 0.3         # low-mass power-law index
 # Module-level k grid — computed once at import
 # with margin. n_k = 2500 gives < 0.1% convergence error in sigma(M).
 # ---------------------------------------------------------------------------
-_K_MIN, _K_MAX, _N_K = 1e-4, 500.0, 2500
+_K_MIN, _K_MAX, _N_K = 1e-4, 150.0, 1050
 _K_GRID    = np.logspace(np.log10(_K_MIN), np.log10(_K_MAX), _N_K)  # Mpc^-1
 _LNK_GRID  = np.log(_K_GRID)
 
 # ---------------------------------------------------------------------------
 # Module-level mass grid — fixed, physical M_sun
 # ---------------------------------------------------------------------------
-_LOG10M_MIN, _LOG10M_MAX, _N_M = 6.0,  16.0 , 750
+_LOG10M_MIN, _LOG10M_MAX, _N_M = 8.0,  15.0 , 600
 _M_GRID    = np.logspace(_LOG10M_MIN, _LOG10M_MAX, _N_M)  # M_sun
 _LNM_GRID  = np.log(_M_GRID)
 
@@ -87,9 +87,11 @@ def _get_pk_vec(cosmo_class, z_target):
     Uses cosmo_class.get_pk_array(). 
     """
     z_arr    = np.array([z_target])
-    Pk_flat  = cosmo_class.get_pk_array(
-        _K_GRID, z_arr, _N_K, 1, False    # non_linear=False
+    
+    Pk_flat = cosmo_class.get_pk_array(
+    _K_GRID, z_arr, _N_K, 1, nonlinear=False
     )
+    
     return np.asarray(Pk_flat)             # (n_k,)
 
 
@@ -125,7 +127,7 @@ def compute_hmf(cosmo_class, z_target):
 
     Returns
     -------
-    M_h    : np.ndarray [M_sun]
+    M_h    : np.ndarray, log spaced [M_sun]
     dndlnm : np.ndarray [Mpc^-3]
     sigma  : np.ndarray dimensionless
     """
@@ -287,30 +289,41 @@ def compute_cosmic_variance(Pk, M_h, dndlnm, sigma, V_survey,
  
     # ── Step 4: b_eff per bin ─────────────────────────────────────────────────
     sigma_cv = np.zeros(n_bins, dtype=np.float64)
- 
+
     for i in range(n_bins):
-        idx_lo = np.searchsorted(M_h, M_h_edges[i],     side='left')
-        idx_hi = np.searchsorted(M_h, M_h_edges[i + 1], side='right')
- 
+        M_h_lo = M_h_edges[i]
+        M_h_hi = M_h_edges[i + 1]
+
+        idx_lo = np.searchsorted(M_h, M_h_lo, side='left')
+        idx_hi = np.searchsorted(M_h, M_h_hi, side='right')
+
         if idx_hi - idx_lo < 2:
-            # Bin narrower than grid spacing — use nearest grid point bias
-            idx_mid      = min(max(idx_lo, 0), len(b_SMT) - 1)
-            sigma_cv[i]  = b_SMT[idx_mid] * sigma_DM
+            idx_mid     = min(max(idx_lo, 0), len(b_SMT) - 1)
+            sigma_cv[i] = b_SMT[idx_mid] * sigma_DM
             continue
- 
-        lnM_sl  = lnM_h[idx_lo:idx_hi]
-        dndlnm_sl = dndlnm[idx_lo:idx_hi]
-        b_sl    = b_SMT[idx_lo:idx_hi]
- 
+
+        # Interpolate dndlnm and b_SMT at the exact bin edges
+        lnM_lo = np.log(M_h_lo)
+        lnM_hi = np.log(M_h_hi)
+
+        dndlnm_lo = np.interp(lnM_lo, lnM_h, dndlnm)
+        dndlnm_hi = np.interp(lnM_hi, lnM_h, dndlnm)
+        b_lo      = np.interp(lnM_lo, lnM_h, b_SMT)
+        b_hi      = np.interp(lnM_hi, lnM_h, b_SMT)
+
+        # Build arrays with exact endpoints prepended/appended
+        lnM_sl    = np.concatenate([[lnM_lo],    lnM_h[idx_lo:idx_hi],    [lnM_hi]])
+        dndlnm_sl = np.concatenate([[dndlnm_lo], dndlnm[idx_lo:idx_hi],   [dndlnm_hi]])
+        b_sl      = np.concatenate([[b_lo],       b_SMT[idx_lo:idx_hi],    [b_hi]])
+
         norm = np.trapz(dndlnm_sl, lnM_sl)
-    
+
         if norm <= 0.0:
-            # HMF exponentially suppressed — use bias at upper edge of bin
             sigma_cv[i] = b_sl[-1] * sigma_DM
             continue
- 
-        b_eff        = np.trapz(b_sl * dndlnm_sl, lnM_sl) / norm
-        sigma_cv[i]  = b_eff * sigma_DM
- 
+
+        b_eff       = np.trapz(b_sl * dndlnm_sl, lnM_sl) / norm
+        sigma_cv[i] = b_eff * sigma_DM
+
     return sigma_cv
- 
+

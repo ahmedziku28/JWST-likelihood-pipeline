@@ -1,0 +1,137 @@
+# ── Theory ─────────────────────────────────────────────────
+theory:
+  classy:
+    path: global
+    stop_at_error: False
+    extra_args:
+      use_exotic_DE: False
+      N_ncdm: 1
+      N_ur: 2.0328
+      P_k_max_1/Mpc: 150.0
+      z_max_pk: 16.0
+      non_linear: halofit
+
+# ── Likelihood ─────────────────────────────────────────────
+likelihood:
+  jwst_likelihood_uvlf.UVLFLikelihood:
+    python_path: "/home/lustre_p/ahmed.omar/workspace/exo_de_project/likelihood/"
+    integrate_bin: True
+    use_volume_correction: True
+    n_gl: 2
+    z_min_donnan: 9.0
+    z_min_finkelstein: 8.9
+    use_donnan_bins: True
+    use_finkelstein_bins: True
+    vary_SHMR: True
+    vary_beta: False
+  H0.riess2020: null
+  sn.pantheonplus:
+    use_abs_mag: False
+  bao.desi_dr2: null
+  planck_2018_lowl.TT_clik: null
+  planck_2018_lowl.EE_clik: null
+  planck_2018_highl_plik.TTTEEE_lite: null
+  planck_2018_lensing.native: null
+
+# ── Parameters ─────────────────────────────────────────────
+params:
+  # ── Sampled cosmological (CMB) ──
+  theta_s_100:
+    prior: {min: 0.9, max: 1.2}
+    ref: {dist: norm, loc: 1.0416, scale: 0.0004}
+    proposal: 0.0002
+    latex: 100\theta_{\rm s}
+  omega_b:
+    prior: {dist: norm, loc: 0.02235, scale: 0.00037}
+    ref: {dist: norm, loc: 0.02237, scale: 0.00010}
+    proposal: 0.00008
+    latex: \Omega_{\rm b} h^2
+  omega_cdm:
+    prior: {min: 0.05, max: 0.18}
+    ref: {dist: norm, loc: 0.12, scale: 0.001}
+    proposal: 0.0005
+    latex: \Omega_{\rm c} h^2
+  tau_reio:
+    prior: {min: 0.01, max: 0.8}
+    ref: {dist: norm, loc: 0.055, scale: 0.006}
+    proposal: 0.003
+    latex: \tau_{\rm reio}
+  logA:
+    prior: {min: 1.61, max: 3.91}
+    ref: {dist: norm, loc: 3.05, scale: 0.001}
+    proposal: 0.001
+    drop: true
+    latex: \log(10^{10} A_{\rm s})
+  n_s:
+    prior: {min: 0.8, max: 1.2}
+    ref: {dist: norm, loc: 0.965, scale: 0.004}
+    proposal: 0.002
+    latex: n_{\rm s}
+
+  # ── SHMR sampled (full Stefanon DPL) ──
+  shmr_log_Mc:
+    prior: {dist: norm, loc: 11.5, scale: 0.2}
+    ref: 11.5
+    proposal: 0.08
+    latex: \log_{10}(M_c)
+  shmr_N:
+    prior: {dist: norm, loc: 0.0297, scale: 0.0065}
+    ref: 0.0297
+    proposal: 0.003
+    latex: N_{\rm SHMR}
+  shmr_beta:
+    prior: {dist: norm, loc: 1.35, scale: 0.26}
+    ref: 1.35
+    proposal: 0.12
+    latex: \beta_{\rm SHMR}
+
+  # ── Neutrino mass (fixed) ──
+  m_ncdm:
+    value: 0.06
+    renames: mnu
+
+  # ── Derived parameters ──
+  Omega_m:
+    derived: true
+    latex: \Omega_m
+  Omega_Lambda:
+    derived: true
+    latex: \Omega_\Lambda
+  sigma8:
+    latex: \sigma_8
+  Omega_b:
+    derived: 'lambda omega_b, H0: omega_b * (100/H0)**2'
+    latex: \Omega_{\rm b}
+  Omega_cdm:
+    derived: 'lambda omega_cdm, H0: omega_cdm * (100/H0)**2'
+    latex: \Omega_{\rm c}
+  S8:
+    derived: 'lambda sigma8, Omega_m: sigma8*(Omega_m/0.3)**0.5'
+    latex: S_8
+  age:
+    derived: true
+    latex: t_0 \,[\rm Gyr]
+  rs_drag:
+    derived: true
+    latex: r_{\rm s,drag} \,[\rm Mpc]
+  H0:
+    latex: H_0
+  A_s:
+    value: 'lambda logA: 1e-10*np.exp(logA)'
+    latex: A_{\rm s}
+  z_reio:
+    latex: z_{\rm re}
+
+# ── Sampler ────────────────────────────────────────────────
+sampler:
+  mcmc:
+    covmat: auto
+    drag: true
+    oversample_power: 0.4
+    proposal_scale: 1.9
+    Rminus1_stop: 0.02
+    Rminus1_cl_stop: 0.2
+    learn_every: '11d'
+    max_tries: 2000
+
+output: outputs/lcdm_uvlf_bg_cmb_vshmr_full

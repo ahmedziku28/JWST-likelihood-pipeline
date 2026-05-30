@@ -1,0 +1,33 @@
+======================================================
+Job started on nut03.localdomain at Sat May 30 18:36:38 EET 2026
+======================================================
+Checking which CLASS is loaded...
+Loaded CLASS from: /home/lustre_p/ahmed.omar/workspace/venvs/exo_DE/lib/python3.8/site-packages/classy/__init__.py
+[0 : output] Output to be read-from/written-into folder 'outputs', with prefix 'exo_uvlf_bg_vbeta_full'
+[0 : prior] *WARNING* External prior 'h2_positivity' loaded. Mind that it might not be normalized!
+[0 : prior] *WARNING* External prior 'e2_pre_class' loaded. Mind that it might not be normalized!
+[0 : classy] `classy` module loaded successfully from /home/lustre_p/ahmed.omar/workspace/venvs/exo_DE/lib/python3.8/site-packages/classy
+[0 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=True
+[7 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=True
+[3 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=True
+[1 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=True
+[6 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=True
+[2 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=True
+[5 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=True
+[7 : bao.desi_dr2] Initialized.
+[0 : bao.desi_dr2] Initialized.
+[3 : bao.desi_dr2] Initialized.
+[4 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=True
+[6 : bao.desi_dr2] Initialized.
+[2 : bao.desi_dr2] Initialized.
+[1 : bao.desi_dr2] Initialized.
+[5 : bao.desi_dr2] Initialized.
+[4 : bao.desi_dr2] Initialized.
+[5 : mcmc] Getting initial point... (this may take a few seconds)
+[6 : mcmc] Getting initial point... (this may take a few seconds)
+[0 : mcmc] Getting initial point... (this may take a few seconds)
+[4 : mcmc] Getting initial point... (this may take a few seconds)
+[1 : mcmc] Getting initial point... (this may take a few seconds)
+[3 : mcmc] Getting initial point... (this may take a few seconds)
+[2 : mcmc] Getting initial point... (this may take a few seconds)
+[7 : mcmc] Getting initial point... (this may take a few seconds)

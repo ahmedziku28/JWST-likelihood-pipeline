@@ -1,0 +1,74 @@
+Parameter autocorrelation lengths (effective number of samples N_eff = tot weight/weight length)
+
+                                            Weight Length   Sample length           N_eff
+a_samp                                             363.55           35.42              88
+s                                                   24.16            2.35            1329
+shmr_log_Mc                                        391.02           38.10              82
+shmr_N                                             438.50           42.72              73
+shmr_beta                                          234.14           22.81             137
+a_exo                                              363.55           35.42              88
+b_exo                                              314.57           30.65             102
+minuslogprior                                      359.37           35.01              89
+minuslogprior__0                                   359.37           35.01              89
+chi2                                               519.70           50.64              61
+chi2__jwst_likelihood_uvlf.UVLFLikelihood          519.70           50.64              61
+
+
+mean convergence stats using remaining chains
+param sqrt(var(chain mean)/mean(chain var))
+
+a_samp                                        0.4719  a_{\rm samp}
+s                                             0.2867  \mathcal{S}
+shmr_log_Mc                                   0.3666  \log_{10}(M_c)
+shmr_N                                        0.3685  N_{\rm SHMR}
+shmr_beta                                     0.3604  \beta_{\rm SHMR}
+a_exo                                         0.4719  a_{\rm exo}
+b_exo                                         0.1857  b_{\rm exo}
+minuslogprior                                 0.3619  -\log\pi
+minuslogprior__0                              0.3619  -\log\pi_\mathrm{0}
+chi2                                          0.4064  \chi^2
+chi2__jwst_likelihood_uvlf.UVLFLikelihood     0.4064  \chi^2_\mathrm{jwst\ likelihood\ uvlf.UVLFLikelihood}
+
+var(mean)/mean(var) for eigenvalues of covariance of y of orthonormalized parameters
+  1      0.00157
+  2      0.00742
+  3      0.05550
+  4      0.08570
+  5      0.34186
+
+Split tests: rms_n([delta(upper/lower quantile)]/sd) n={2,3,4}, limit=95%:
+i.e. mean sample splitting change in the quantiles in units of the st. dev.
+
+a_samp                                       0.1257   0.1664   0.1634 upper
+a_samp                                       0.0514   0.0395   0.0541 lower
+s                                            0.1553   0.2632   0.6190 upper
+s                                            0.0017   0.0185   0.0087 lower
+shmr_log_Mc                                  0.2773   0.2295   0.2763 upper
+shmr_log_Mc                                  0.2171   0.2783   0.2265 lower
+shmr_N                                       0.1166   0.1026   0.2357 upper
+shmr_N                                       0.0110   0.0193   0.0149 lower
+shmr_beta                                    0.3222   0.1952   0.3388 upper
+shmr_beta                                    0.1263   0.3230   0.4035 lower
+a_exo                                        0.1257   0.1664   0.1634 upper
+a_exo                                        0.0514   0.0395   0.0541 lower
+b_exo                                        0.0405   0.1681   0.6458 upper
+b_exo                                        0.0699   0.0304   0.0898 lower
+minuslogprior                                0.0023   0.1386   0.0971 upper
+minuslogprior                                0.0456   0.0798   0.2509 lower
+minuslogprior__0                             0.0023   0.1386   0.0971 upper
+minuslogprior__0                             0.0456   0.0798   0.2509 lower
+chi2                                         0.1240   0.1074   0.2305 upper
+chi2                                         0.0287   0.0365   0.0391 lower
+chi2__jwst_likelihood_uvlf.UVLFLikelihood    0.1240   0.1074   0.2305 upper
+chi2__jwst_likelihood_uvlf.UVLFLikelihood    0.0287   0.0365   0.0391 lower
+
+Raftery&Lewis statistics
+
+chain  markov_thin  indep_thin    nburn
+   0      Failed/not enough samples
+   1      Failed/not enough samples
+   2      Failed/not enough samples
+   3      Failed/not enough samples
+   4      Failed/not enough samples
+   5      Failed/not enough samples
+

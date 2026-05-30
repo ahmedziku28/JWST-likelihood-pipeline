@@ -1,0 +1,150 @@
+# ── Theory ─────────────────────────────────────────────────
+theory:
+  classy:
+    path: global
+    stop_at_error: False
+    extra_args:
+      z_c_exo: 16.0
+      sigma_z_exo: 3.25
+      N_ncdm: 1
+      N_ur: 2.0328
+      P_k_max_1/Mpc: 150.0
+      z_max_pk: 16.0
+
+# ── Likelihood ─────────────────────────────────────────────
+likelihood:
+  jwst_likelihood_uvlf.UVLFLikelihood:
+    python_path: "/home/lustre_p/ahmed.omar/workspace/exo_de_project/likelihood/"
+    integrate_bin: True
+    use_volume_correction: True
+    n_gl: 2
+    z_min_donnan: 10.0
+    z_min_finkelstein: 10.9
+    use_donnan_bins: False
+    use_finkelstein_bins: True
+    vary_SHMR: True
+    vary_beta: False
+
+# ── Polygon physicality prior (H^2(z) >= 0) ────────────────
+prior:
+  h2_positivity: "lambda a_samp, s: 0.0 if s >= (-0.07202 * a_samp - 1381.5969) else -1e500"
+
+# ── Parameters ─────────────────────────────────────────────
+params:
+  # ── Exotic DE sampled ──
+  a_samp:
+    prior: {min: -350.0, max: -1.0e-10}
+    ref: {min: -75.0, max: -5.0}
+    proposal: 6.0
+    drop: true
+    latex: a_{\rm samp}
+  s:
+    prior: {min: -1000.0, max: -1.0e-10}
+    ref: {min: -250.0, max: -50.0}
+    proposal: 18.0
+    drop: true
+    latex: \mathcal{S}
+
+  # ── Exotic DE derived ──
+  a_exo:
+    value: 'lambda a_samp: a_samp'
+    latex: a_{\rm exo}
+  b_exo:
+    value: 'lambda a_samp, s: s - a_samp'
+    latex: b_{\rm exo}
+  Omega_x0:
+    derived: 'lambda a_exo: a_exo * 5.45846e-6'
+    latex: \Omega_{\mathrm{x},0}
+
+  # ── Sampled cosmological (non-CMB) ──
+  H0:
+    prior: {min: 60.0, max: 80.0}
+    ref: {dist: norm, loc: 67.4, scale: 4.0}
+    proposal: 0.5
+    latex: H_0
+  omega_b:
+    prior: {min: 0.015, max: 0.030}
+    ref: {dist: norm, loc: 0.02237, scale: 0.00010}
+    proposal: 0.00008
+    latex: \Omega_{\rm b} h^2
+  omega_cdm:
+    prior: {min: 0.05, max: 0.18}
+    ref: {dist: norm, loc: 0.1200, scale: 0.002}
+    proposal: 0.001
+    latex: \Omega_{\rm c} h^2
+
+  # ── Fixed primordial / CMB-like parameters ──
+  tau_reio:
+    value: 0.0544
+    latex: \tau_{\rm reio}
+  logA:
+    value: 3.044
+    drop: true
+    latex: \log(10^{10} A_{\rm s})
+  A_s:
+    value: 'lambda logA: 1e-10*np.exp(logA)'
+    latex: A_{\rm s}
+  n_s:
+    value: 0.9649
+    latex: n_{\rm s}
+
+  # ── SHMR sampled (full Stefanon DPL) ──
+  shmr_log_Mc:
+    prior: {dist: norm, loc: 11.5, scale: 0.2}
+    ref: 11.5
+    proposal: 0.08
+    latex: \log_{10}(M_c)
+  shmr_N:
+    prior: {dist: norm, loc: 0.0297, scale: 0.0065}
+    ref: 0.0297
+    proposal: 0.003
+    latex: N_{\rm SHMR}
+  shmr_beta:
+    prior: {dist: norm, loc: 1.35, scale: 0.26}
+    ref: 1.35
+    proposal: 0.12
+    latex: \beta_{\rm SHMR}
+
+  # ── Neutrino mass (fixed) ──
+  m_ncdm:
+    value: 0.06
+    renames: mnu
+
+  # ── Derived parameters ──
+  Omega_m:
+    derived: true
+    latex: \Omega_m
+  Omega_Lambda:
+    derived: true
+    latex: \Omega_\Lambda
+  sigma8:
+    latex: \sigma_8
+  Omega_b:
+    derived: 'lambda omega_b, H0: omega_b * (100/H0)**2'
+    latex: \Omega_{\rm b}
+  Omega_cdm:
+    derived: 'lambda omega_cdm, H0: omega_cdm * (100/H0)**2'
+    latex: \Omega_{\rm c}
+  S8:
+    derived: 'lambda sigma8, Omega_m: sigma8*(Omega_m/0.3)**0.5'
+    latex: S_8
+  age:
+    derived: true
+    latex: t_0 \,[\rm Gyr]
+  rs_drag:
+    derived: true
+    latex: r_{\rm s,drag} \,[\rm Mpc]
+
+# ── Sampler ────────────────────────────────────────────────
+sampler:
+  mcmc:
+    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/builders/builder_exo_vshmr/outputs/builder_exo_vshmr.covmat
+    drag: true
+    oversample_power: 0.4
+    proposal_scale: 1.9
+    Rminus1_stop: 0.02
+    Rminus1_cl_stop: 0.2
+    learn_every: '11d'
+    max_tries: 2000
+
+output: outputs/exo_ceers_vshmr_restr

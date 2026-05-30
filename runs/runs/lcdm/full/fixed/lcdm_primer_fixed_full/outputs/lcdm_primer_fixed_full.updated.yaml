@@ -1,0 +1,201 @@
+theory:
+  classy:
+    path: global
+    speed: 0.2
+    stop_at_error: false
+    extra_args:
+      use_exotic_DE: false
+      N_ncdm: 1
+      N_ur: 2.0328
+      P_k_max_1/Mpc: 150.0
+      z_max_pk: 16.0
+    ignore_obsolete: false
+    use_renames: false
+    renames:
+      As: A_s
+      ns: n_s
+      nrun: alpha_s
+      nrunrun: beta_s
+      nt: n_t
+      ntrun: alpha_t
+      rdrag: rs_drag
+      omegak: Omega_k
+      omegal: Omega_Lambda
+      w: w0_fld
+      wa: wa_fld
+      omegabh2: omega_b
+      omegab: Omega_b
+      omegach2: omega_cdm
+      omegac: Omega_cdm
+      omegam: Omega_m
+      omegan: Omega_nu
+      tau: tau_reio
+      zrei: z_reio
+      deltazrei: reionization_width
+      helium_redshift: helium_fullreio_redshift
+      helium_delta_redshift: helium_fullreio_width
+      yhe: YHe
+      yheused: YHe
+    version: v3.3.4
+    input_params:
+    - H0
+    - omega_b
+    - omega_cdm
+    - tau_reio
+    - A_s
+    - n_s
+    - m_ncdm
+    output_params:
+    - Omega_m
+    - Omega_Lambda
+    - sigma8
+    - age
+    - rs_drag
+likelihood:
+  jwst_likelihood_uvlf.UVLFLikelihood:
+    use_volume_correction: true
+    integrate_bin: true
+    n_gl: 2
+    z_min_donnan: 9.0
+    z_min_finkelstein: 8.9
+    vary_SHMR: false
+    vary_beta: false
+    use_donnan_bins: true
+    use_finkelstein_bins: false
+    type: []
+    speed: -1
+    stop_at_error: false
+    version: null
+    python_path: /home/lustre_p/ahmed.omar/workspace/exo_de_project/likelihood/
+    input_params: []
+    output_params: []
+params:
+  H0:
+    prior:
+      min: 60.0
+      max: 80.0
+    ref:
+      dist: norm
+      loc: 67.4
+      scale: 4.0
+    proposal: 0.5
+    latex: H_0
+  omega_b:
+    prior:
+      min: 0.015
+      max: 0.03
+    ref:
+      dist: norm
+      loc: 0.02237
+      scale: 0.0001
+    proposal: 8.0e-05
+    latex: \Omega_{\rm b} h^2
+    renames:
+    - omegabh2
+  omega_cdm:
+    prior:
+      min: 0.05
+      max: 0.18
+    ref:
+      dist: norm
+      loc: 0.12
+      scale: 0.002
+    proposal: 0.001
+    latex: \Omega_{\rm c} h^2
+    renames:
+    - omegach2
+  tau_reio:
+    value: 0.0544
+    latex: \tau_{\rm reio}
+    renames:
+    - tau
+  logA:
+    value: 3.044
+    drop: true
+    latex: \log(10^{10} A_{\rm s})
+  A_s:
+    value: 'lambda logA: 1e-10*np.exp(logA)'
+    latex: A_{\rm s}
+    derived: true
+    renames:
+    - As
+  n_s:
+    value: 0.9649
+    latex: n_{\rm s}
+    renames:
+    - ns
+  m_ncdm:
+    value: 0.06
+    renames: mnu
+  Omega_m:
+    derived: true
+    latex: \Omega_m
+    renames:
+    - omegam
+  Omega_Lambda:
+    derived: true
+    latex: \Omega_\Lambda
+    renames:
+    - omegal
+  sigma8:
+    latex: \sigma_8
+    derived: true
+  Omega_b:
+    derived: 'lambda omega_b, H0: omega_b * (100/H0)**2'
+    latex: \Omega_{\rm b}
+    renames:
+    - omegab
+  Omega_cdm:
+    derived: 'lambda omega_cdm, H0: omega_cdm * (100/H0)**2'
+    latex: \Omega_{\rm c}
+    renames:
+    - omegac
+  S8:
+    derived: 'lambda sigma8, Omega_m: sigma8*(Omega_m/0.3)**0.5'
+    latex: S_8
+  age:
+    derived: true
+    latex: t_0 \,[\rm Gyr]
+  rs_drag:
+    derived: true
+    latex: r_{\rm s,drag} \,[\rm Mpc]
+    renames:
+    - rdrag
+sampler:
+  mcmc:
+    burn_in: 0
+    max_tries: 40d
+    covmat: auto
+    covmat_params: null
+    proposal_scale: 1.9
+    output_every: 60s
+    learn_every: 11d
+    temperature: 1
+    learn_proposal: true
+    learn_proposal_Rminus1_max: 2.0
+    learn_proposal_Rminus1_max_early: 30.0
+    learn_proposal_Rminus1_min: 0.0
+    max_samples: .inf
+    Rminus1_stop: 0.02
+    Rminus1_cl_stop: 0.2
+    Rminus1_cl_level: 0.95
+    Rminus1_single_split: 4
+    measure_speeds: true
+    oversample_power: 0
+    oversample_thin: true
+    drag: false
+    blocking:
+    - - 1
+      - - H0
+        - omega_b
+        - omega_cdm
+    callback_function: null
+    callback_every: null
+    seed: null
+    check_every: null
+    oversample: null
+    drag_limits: null
+    fallback_covmat_scale: 4
+    version: 3.5.7
+output: lcdm_primer_fixed_full
+version: 3.5.7

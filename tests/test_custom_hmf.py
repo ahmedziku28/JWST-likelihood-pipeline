@@ -307,8 +307,8 @@ def test_04_sigma8_recovery():
     rho_m0 = Om0 * 2.775e11 * h**2
 
     # Run the pipeline at z=0
-    M_h, dndlnm, sigma = hmf_mod.compute_hmf(cosmo, 0.0)
-
+    M_h, dndlnm, sigma, Pk = hmf_mod.compute_hmf(cosmo, 0.0)
+    
     # Mass corresponding to R = 8/h Mpc
     R8  = 8.0 / h                     # physical Mpc
     M_8 = (4.0/3.0) * np.pi * rho_m0 * R8**3

@@ -1,0 +1,15 @@
+======================================================
+Job started on nut04.localdomain at Sat May 30 18:36:39 EET 2026
+======================================================
+Checking which CLASS is loaded...
+Loaded CLASS from: /home/lustre_p/ahmed.omar/workspace/venvs/exo_DE/lib/python3.8/site-packages/classy/__init__.py
+[0 : output] Output to be read-from/written-into folder 'outputs', with prefix 'lcdm_uvlf_bg_fixed_full'
+[0 : classy] `classy` module loaded successfully from /home/lustre_p/ahmed.omar/workspace/venvs/exo_DE/lib/python3.8/site-packages/classy
+[5 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=False
+[1 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=False
+[4 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=False
+[0 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=False
+[2 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=False
+[6 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=False
+[3 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=False
+[7 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=False | varying beta only=False

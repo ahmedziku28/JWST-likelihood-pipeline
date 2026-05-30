@@ -56,7 +56,7 @@ from pipeline.hmf import _N_M, _N_K
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Default stellar mass bin edges fixed for comparability between redshift bins.
-DEFAULT_LOG10_MSTAR_BINS = np.arange(5.0, 15.5, 0.5)
+DEFAULT_LOG10_MSTAR_BINS = np.arange(7.5, 15.5, 0.5)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -88,18 +88,29 @@ def _invert_shmr(log10_edges, M_star_grid, M_h_grid):
 
 def _integrate_bin(lnM_h, integrand, M_h, M_h_lo, M_h_hi):
     """
-    Trapezoidal integral of integrand over HMF grid points in [M_h_lo, M_h_hi].
+    Trapezoidal interpolatedintegral of integrand over HMF grid points in [M_h_lo, M_h_hi].
 
     searchsorted with left/right sides gives a half-open interval so abutting
     bins share no grid points and there is no double-counting at boundaries.
 
     Returns 0.0 if fewer than 2 grid points fall in range.
     """
+    
+    if M_h_lo >= M_h_hi:
+        return 0.0
+    
     idx_lo = np.searchsorted(M_h, M_h_lo, side='left')
     idx_hi = np.searchsorted(M_h, M_h_hi, side='right')
-    if idx_hi - idx_lo < 2:
-        return 0.0
-    return np.trapz(integrand[idx_lo:idx_hi], lnM_h[idx_lo:idx_hi])
+    
+
+
+    f_lo   = np.interp(np.log(M_h_lo), lnM_h, integrand)
+    f_hi   = np.interp(np.log(M_h_hi), lnM_h, integrand)
+
+    lnM_slice = np.concatenate([[np.log(M_h_lo)], lnM_h[idx_lo:idx_hi], [np.log(M_h_hi)]])
+    f_slice   = np.concatenate([[f_lo],            integrand[idx_lo:idx_hi], [f_hi]])
+
+    return np.trapz(f_slice, lnM_slice)
 
 
 def _bin_galaxies(mstar_assign, mu, edges):

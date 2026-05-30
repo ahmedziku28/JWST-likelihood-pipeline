@@ -1,0 +1,374 @@
+{
+  "exo_bg": {
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "28995",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-30T05:16:18.572178"
+  },
+  "exo_bg_cmb": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_cmb_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_cmb_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_cmb_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_cmb_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_cmb_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_cmb_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_bg_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_ceers_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_cmb_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_cmb_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_cmb_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_cmb_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_cmb_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_cmb_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_bg_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_primer_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_bg_cmb_fixed_full": {
+    "attempts": 2,
+    "auto_resubmit_attempts": 0,
+    "job_id": "28990",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-30T03:07:09.417171"
+  },
+  "exo_uvlf_bg_cmb_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_bg_cmb_vbeta_full": {
+    "attempts": 1,
+    "job_id": "29009",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-30T18:41:57.800316"
+  },
+  "exo_uvlf_bg_cmb_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_bg_cmb_vshmr_full": {
+    "attempts": 1,
+    "job_id": "29010",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-30T18:41:57.826921"
+  },
+  "exo_uvlf_bg_cmb_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_bg_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_bg_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_bg_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_bg_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_bg_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_bg_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_fixed_restr": {
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "28978",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-29T05:13:27.636580"
+  },
+  "exo_uvlf_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "exo_uvlf_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_bg": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_bg_cmb": {
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "28998",
+    "last_known_status": "FAILED",
+    "submitted_at": "2026-05-30T06:47:49.524244"
+  },
+  "lcdm_ceers_bg_cmb_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_cmb_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_cmb_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_cmb_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_cmb_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_cmb_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_bg_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_ceers_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_cmb_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_cmb_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_cmb_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_cmb_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_cmb_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_cmb_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_bg_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_fixed_full": {
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29000",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-30T08:16:00.521720"
+  },
+  "lcdm_primer_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_primer_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_bg_cmb_fixed_full": {
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29003",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-30T17:38:51.698598"
+  },
+  "lcdm_uvlf_bg_cmb_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_bg_cmb_vbeta_full": {
+    "attempts": 1,
+    "job_id": "28973",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-29T05:00:24.967292"
+  },
+  "lcdm_uvlf_bg_cmb_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_bg_cmb_vshmr_full": {
+    "attempts": 1,
+    "job_id": "29011",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-30T18:41:57.851892"
+  },
+  "lcdm_uvlf_bg_cmb_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_bg_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_bg_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_bg_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_bg_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_bg_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_bg_vshmr_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_fixed_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_fixed_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_vbeta_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_vbeta_restr": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_vshmr_full": {
+    "last_known_status": "PENDING"
+  },
+  "lcdm_uvlf_vshmr_restr": {
+    "last_known_status": "PENDING"
+  }
+}

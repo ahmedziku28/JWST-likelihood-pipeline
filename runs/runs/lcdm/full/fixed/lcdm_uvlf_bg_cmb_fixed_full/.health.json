@@ -1,0 +1,21 @@
+{
+  "verdict": "EARLY",
+  "n_samples": 1196,
+  "chain_lengths": [
+    65,
+    91,
+    88,
+    80,
+    71,
+    86,
+    93,
+    91
+  ],
+  "rminus1": null,
+  "trajectory": [],
+  "per_param": {},
+  "bottleneck": null,
+  "n_eff": 0,
+  "acceptance": null,
+  "timestamp": "2026-05-30T21:09:55.142318"
+}

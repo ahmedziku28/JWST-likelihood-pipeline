@@ -1,0 +1,198 @@
+======================================================
+Job started on nut05.localdomain at Fri May 29 05:00:25 EET 2026
+======================================================
+Checking which CLASS is loaded...
+Loaded CLASS from: /home/lustre_p/ahmed.omar/workspace/venvs/exo_DE/lib/python3.8/site-packages/classy/__init__.py
+[0 : output] Output to be read-from/written-into folder 'outputs', with prefix 'lcdm_uvlf_bg_cmb_vshmr_full'
+[0 : classy] `classy` module loaded successfully from /home/lustre_p/ahmed.omar/workspace/venvs/exo_DE/lib/python3.8/site-packages/classy
+[1 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=True | varying beta only=False
+[7 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=True | varying beta only=False
+[4 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=True | varying beta only=False
+[5 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=True | varying beta only=False
+[3 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=True | varying beta only=False
+[0 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=True | varying beta only=False
+[6 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=True | varying beta only=False
+[2 : jwst_likelihood_uvlf.uvlflikelihood] UVLFLikelihood initialized | Donnan bins=5 (29 pts) | Finkelstein bins=3 (11 pts) | volume_correction=True | integrate_bin=True | z_min_donnan=9.0 | z_min_finkelstein=8.9 | varying SHMR parameters=True | varying beta only=False
+[4 : bao.desi_dr2] Initialized.
+[1 : bao.desi_dr2] Initialized.
+[5 : bao.desi_dr2] Initialized.
+[3 : bao.desi_dr2] Initialized.
+[0 : bao.desi_dr2] Initialized.
+[7 : bao.desi_dr2] Initialized.
+[0 : planck_2018_lowl.tt_clik] `clik` module loaded successfully from /home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/code/planck/clik-main/lib/python/site-packages/clik
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  gibbs_gauss b13c8fda-1837-41b5-ae2d-78d6b723fcf1
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  gibbs_gauss b13c8fda-1837-41b5-ae2d-78d6b723fcf1
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  gibbs_gauss b13c8fda-1837-41b5-ae2d-78d6b723fcf1
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  gibbs_gauss b13c8fda-1837-41b5-ae2d-78d6b723fcf1
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  gibbs_gauss b13c8fda-1837-41b5-ae2d-78d6b723fcf1
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/commander/commander_dx12_v3_2_29.clik' on test data. got -11.6257 expected -11.6257 (diff -1.07424e-09)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/commander/commander_dx12_v3_2_29.clik' on test data. got -11.6257 expected -11.6257 (diff -1.07424e-09)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/commander/commander_dx12_v3_2_29.clik' on test data. got -11.6257 expected -11.6257 (diff -1.07424e-09)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/commander/commander_dx12_v3_2_29.clik' on test data. got -11.6257 expected -11.6257 (diff -1.07424e-09)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/commander/commander_dx12_v3_2_29.clik' on test data. got -11.6257 expected -11.6257 (diff -1.07424e-09)
+----
+[0 : planck_2018_lowl.ee_clik] `clik` module loaded successfully from /home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/code/planck/clik-main/lib/python/site-packages/clik
+Initializing SimAll
+Initializing SimAll
+Initializing SimAll
+Initializing SimAll
+Initializing SimAll
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  simall simall_EE_BB_TE
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  simall simall_EE_BB_TE
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  simall simall_EE_BB_TE
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  simall simall_EE_BB_TE
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  simall simall_EE_BB_TE
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/simall/simall_100x143_offlike5_EE_Aplanck_B.clik' on test data. got -197.99 expected -197.99 (diff -4.1778e-08)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/simall/simall_100x143_offlike5_EE_Aplanck_B.clik' on test data. got -197.99 expected -197.99 (diff -4.1778e-08)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/simall/simall_100x143_offlike5_EE_Aplanck_B.clik' on test data. got -197.99 expected -197.99 (diff -4.1778e-08)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/simall/simall_100x143_offlike5_EE_Aplanck_B.clik' on test data. got -197.99 expected -197.99 (diff -4.1778e-08)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/simall/simall_100x143_offlike5_EE_Aplanck_B.clik' on test data. got -197.99 expected -197.99 (diff -4.1778e-08)
+----
+[0 : planck_2018_highl_plik.ttteee_lite] `clik` module loaded successfully from /home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/code/planck/clik-main/lib/python/site-packages/clik
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  gibbs_gauss b13c8fda-1837-41b5-ae2d-78d6b723fcf1
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/commander/commander_dx12_v3_2_29.clik' on test data. got -11.6257 expected -11.6257 (diff -1.07424e-09)
+----
+ Initializing Planck likelihood, version Plik_v22_cmbonly_like                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+ Initializing Planck likelihood, version Plik_v22_cmbonly_like                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+ Initializing Planck likelihood, version Plik_v22_cmbonly_like                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+ Initializing Planck likelihood, version Plik_v22_cmbonly_like                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+ Initializing Planck likelihood, version Plik_v22_cmbonly_like                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+Initializing SimAll
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  simall simall_EE_BB_TE
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/simall/simall_100x143_offlike5_EE_Aplanck_B.clik' on test data. got -197.99 expected -197.99 (diff -4.1778e-08)
+----
+ Initializing Planck likelihood, version Plik_v22_cmbonly_like                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  plik_cmbonly
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  plik_cmbonly
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  plik_cmbonly
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/hi_l/plik_lite/plik_lite_v22_TTTEEE.clik' on test data. got -292.286 expected -292.286 (diff -3.86228e-09)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/hi_l/plik_lite/plik_lite_v22_TTTEEE.clik' on test data. got -292.286 expected -292.286 (diff -3.86228e-09)
+----
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  plik_cmbonly
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/hi_l/plik_lite/plik_lite_v22_TTTEEE.clik' on test data. got -292.286 expected -292.286 (diff -3.86228e-09)
+----
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  plik_cmbonly
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/hi_l/plik_lite/plik_lite_v22_TTTEEE.clik' on test data. got -292.286 expected -292.286 (diff -3.86228e-09)
+----
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/hi_l/plik_lite/plik_lite_v22_TTTEEE.clik' on test data. got -292.286 expected -292.286 (diff -3.86228e-09)
+----
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  plik_cmbonly
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/hi_l/plik_lite/plik_lite_v22_TTTEEE.clik' on test data. got -292.286 expected -292.286 (diff -3.86228e-09)
+----
+[6 : bao.desi_dr2] Initialized.
+[2 : bao.desi_dr2] Initialized.
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  gibbs_gauss b13c8fda-1837-41b5-ae2d-78d6b723fcf1
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/commander/commander_dx12_v3_2_29.clik' on test data. got -11.6257 expected -11.6257 (diff -1.07424e-09)
+----
+Initializing SimAll
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  simall simall_EE_BB_TE
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/simall/simall_100x143_offlike5_EE_Aplanck_B.clik' on test data. got -197.99 expected -197.99 (diff -4.1778e-08)
+----
+ Initializing Planck likelihood, version Plik_v22_cmbonly_like                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  plik_cmbonly
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/hi_l/plik_lite/plik_lite_v22_TTTEEE.clik' on test data. got -292.286 expected -292.286 (diff -3.86228e-09)
+----
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  gibbs_gauss b13c8fda-1837-41b5-ae2d-78d6b723fcf1
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/commander/commander_dx12_v3_2_29.clik' on test data. got -11.6257 expected -11.6257 (diff -1.07424e-09)
+----
+Initializing SimAll
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  simall simall_EE_BB_TE
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/low_l/simall/simall_100x143_offlike5_EE_Aplanck_B.clik' on test data. got -197.99 expected -197.99 (diff -4.1778e-08)
+----
+ Initializing Planck likelihood, version Plik_v22_cmbonly_like                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+----
+clik version clik_16.0b1-12-gcde855c6debd
+  plik_cmbonly
+Checking likelihood '/home/lustre_p/ahmed.omar/workspace/Modules/cobaya_stuff/cobaya_packages/data/planck_2018/baseline/plc_3.0/hi_l/plik_lite/plik_lite_v22_TTTEEE.clik' on test data. got -292.286 expected -292.286 (diff -3.86228e-09)
+----
+[6 : mcmc] Getting initial point... (this may take a few seconds)
+[2 : mcmc] Getting initial point... (this may take a few seconds)
+[4 : mcmc] Getting initial point... (this may take a few seconds)
+[1 : mcmc] Getting initial point... (this may take a few seconds)
+[3 : mcmc] Getting initial point... (this may take a few seconds)
+[7 : mcmc] Getting initial point... (this may take a few seconds)
+[5 : mcmc] Getting initial point... (this may take a few seconds)
+[0 : mcmc] Getting initial point... (this may take a few seconds)
+[2 : mcmc] Initial point: theta_s_100:1.042046, omega_b:0.02245763, omega_cdm:0.1198592, tau_reio:0.06196548, logA:3.050219, n_s:0.9637119, shmr_log_Mc:11.5, shmr_N:0.0297, shmr_beta:1.35, A_planck:0.9994197
+[3 : mcmc] Initial point: theta_s_100:1.042021, omega_b:0.02248557, omega_cdm:0.1218504, tau_reio:0.05868186, logA:3.049919, n_s:0.959012, shmr_log_Mc:11.5, shmr_N:0.0297, shmr_beta:1.35, A_planck:0.9974456
+[5 : mcmc] Initial point: theta_s_100:1.04173, omega_b:0.02252775, omega_cdm:0.1207863, tau_reio:0.07098264, logA:3.04882, n_s:0.9710902, shmr_log_Mc:11.5, shmr_N:0.0297, shmr_beta:1.35, A_planck:1.001127
+[1 : mcmc] Initial point: theta_s_100:1.041815, omega_b:0.02240958, omega_cdm:0.1209404, tau_reio:0.05470834, logA:3.048977, n_s:0.9691576, shmr_log_Mc:11.5, shmr_N:0.0297, shmr_beta:1.35, A_planck:1.002834
+[0 : mcmc] Initial point: theta_s_100:1.04202, omega_b:0.02243666, omega_cdm:0.120137, tau_reio:0.05348982, logA:3.047735, n_s:0.9708616, shmr_log_Mc:11.5, shmr_N:0.0297, shmr_beta:1.35, A_planck:1.000774
+[7 : mcmc] Initial point: theta_s_100:1.041345, omega_b:0.02244687, omega_cdm:0.1206051, tau_reio:0.05627286, logA:3.051124, n_s:0.9759308, shmr_log_Mc:11.5, shmr_N:0.0297, shmr_beta:1.35, A_planck:0.9980543
+[4 : mcmc] Initial point: theta_s_100:1.040763, omega_b:0.0223275, omega_cdm:0.1216081, tau_reio:0.04710937, logA:3.049213, n_s:0.9660103, shmr_log_Mc:11.5, shmr_N:0.0297, shmr_beta:1.35, A_planck:0.9981306
+[6 : mcmc] Initial point: theta_s_100:1.041768, omega_b:0.02246019, omega_cdm:0.1208452, tau_reio:0.04428873, logA:3.050519, n_s:0.9602712, shmr_log_Mc:11.5, shmr_N:0.0297, shmr_beta:1.35, A_planck:1.002375
+[0 : model] Measuring speeds... (this may take a few seconds)
+[0 : model] Setting measured speeds (per sec): {jwst_likelihood_uvlf.UVLFLikelihood: 1.7, H0.riess2020: 27800.0, sn.pantheonplus: 413.0, bao.desi_dr2: 384.0, planck_2018_lowl.TT_clik: 1510.0, planck_2018_lowl.EE_clik: 2450.0, planck_2018_highl_plik.TTTEEE_lite: 411.0, planck_2018_lensing.native: 1060.0, classy: 0.0232}
+[0 : mcmc] Dragging with number of interpolating steps:
+[0 : mcmc] * 1 : [['theta_s_100', 'omega_b', 'omega_cdm', 'tau_reio', 'logA', 'n_s'], ['shmr_log_Mc', 'shmr_N', 'shmr_beta']]
+[0 : mcmc] * 4 : [['A_planck']]
+[0 : mcmc] Covariance matrix loaded for params ['shmr_log_Mc', 'shmr_N', 'shmr_beta']
+[0 : mcmc] Missing proposal covariance for params ['theta_s_100', 'omega_b', 'omega_cdm', 'tau_reio', 'logA', 'n_s', 'A_planck']
+[0 : mcmc] Covariance matrix not complete. We will start learning the covariance of the proposal earlier: R-1 = 30 (would be 2 if all params loaded).
+[0 : mcmc] Sampling!
+[3 : mcmc] Progress @ 2026-05-29 05:02:51 : 1 steps taken, and 0 accepted.
+[0 : mcmc] Progress @ 2026-05-29 05:02:52 : 1 steps taken, and 0 accepted.
+[6 : mcmc] Progress @ 2026-05-29 05:02:56 : 1 steps taken, and 0 accepted.
+[2 : mcmc] Progress @ 2026-05-29 05:03:32 : 1 steps taken, and 0 accepted.
+[5 : mcmc] Progress @ 2026-05-29 05:03:33 : 1 steps taken, and 0 accepted.
+[7 : mcmc] Progress @ 2026-05-29 05:03:35 : 1 steps taken, and 0 accepted.
+[1 : mcmc] Progress @ 2026-05-29 05:03:37 : 1 steps taken, and 0 accepted.
+[4 : mcmc] Progress @ 2026-05-29 05:03:45 : 1 steps taken, and 0 accepted.
+[3 : mcmc] Progress @ 2026-05-29 05:04:16 : 4 steps taken, and 0 accepted.
+[0 : mcmc] Progress @ 2026-05-29 05:04:22 : 4 steps taken, and 0 accepted.
+[6 : mcmc] Progress @ 2026-05-29 05:04:25 : 3 steps taken, and 2 accepted.
