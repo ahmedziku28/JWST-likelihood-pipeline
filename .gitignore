@@ -44,3 +44,10 @@ __pycache__/
 *~
 
 runs/**/*.log
+*.log
+**/*.log
+*.log
+*.err
+*.npz
+.ipynb_checkpoints/
+tests/likelihood_test_outputs/
