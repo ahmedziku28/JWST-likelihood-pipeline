@@ -24,3 +24,4 @@ pipeline/hmf_sigma.so
 *.aux
 *.log
 *.toc
+runs/**/outputs/
