@@ -35,6 +35,7 @@ from typing import Dict, List, Optional, Tuple, Any
 import random
 import numpy as np
 import glob
+from collections import deque
 
 # ============================================================================
 #  CONSTANTS
@@ -480,6 +481,30 @@ def bump_cpus_in_sh(cfg, new_cpus=2):
         f.write(new_text)
     return True
 
+def _prompt_cmb_cpu_bump(cfgs):
+    # type: (List[Dict[str, Any]]) -> None
+    """If any cfg has CMB likelihood, offer to bump --cpus-per-task to 2 in
+    those .sh files. Centralises the prompt previously inlined only in
+    cmd_launch and cmd_auto.
+
+    cfgs is a list of run-config dicts (i.e. all_runs[rn] entries).
+    Silent no-op if no CMB runs in the set.
+    """
+    cmb_cfgs = [c for c in cfgs if c.get('has_cmb')]
+    if not cmb_cfgs:
+        return
+    n = len(cmb_cfgs)
+    word = "has" if n == 1 else "have"
+    print()
+    ans = input(_c(
+        "  {} run(s) {} CMB likelihood. Bump --cpus-per-task to 2? [y/N]: ".format(n, word),
+        'cyan'))
+    if ans.strip().lower() not in ('y', 'yes'):
+        return
+    for cfg in cmb_cfgs:
+        ok = bump_cpus_in_sh(cfg, new_cpus=2)
+        print("    {} cpus-per-task=2 ({})".format(
+            cfg['run_name'], "applied" if ok else "already set or failed"))
 
 # ============================================================================
 #  STATUS DETECTION — the heart of the orchestrator
@@ -626,42 +651,22 @@ def get_status(run_name, all_runs, state):
         info['job_id'] = entry.get('job_id')
         return info
 
-    # 1. CONVERGED — strongest signal: the .sh epilogue line
-    log_tail = _read_tail(log_path)
-    if 'Run converged at' in log_tail:
+# 1. CONVERGED — ONLY trust cobaya's own termination message in the .log
+    # Threshold-based fallbacks were removed: they false-positive on transient
+    # sub-threshold R-1 values when CL R-1 is still above its stop, since
+    # cobaya correctly keeps running but a one-shot R-1 < 0.02 reading would
+    # otherwise fire CONVERGED here.
+    if _log_contains_converged(log_path):
         info['status'] = 'CONVERGED'
         prog = _parse_progress(progress_path)
         if prog is not None:
             info['rminus1'], info['acceptance'], info['n_samples'] = prog
         return info
 
-    # 2. CONVERGED — fallback #1: progress file's last R-1
+    # Still read .progress so the table can show current R-1 for non-CONVERGED runs.
     prog = _parse_progress(progress_path)
     if prog is not None:
         info['rminus1'], info['acceptance'], info['n_samples'] = prog
-        if prog[0] < CONVERGENCE_RMINUS1:
-            info['status'] = 'CONVERGED'
-            return info
-
-    # 3. CONVERGED — fallback #2: checkpoint file's Rminus1_last
-    checkpoint_path = os.path.join(folder, 'outputs', run_name + '.checkpoint')
-    if os.path.exists(checkpoint_path):
-        try:
-            with open(checkpoint_path) as f:
-                ckpt_text = f.read()
-            m = re.search(r'Rminus1_last:\s*([\d.eE+-]+)', ckpt_text)
-            if m:
-                try:
-                    r_last = float(m.group(1))
-                    if info['rminus1'] is None:
-                        info['rminus1'] = r_last
-                    if r_last < CONVERGENCE_RMINUS1:
-                        info['status'] = 'CONVERGED'
-                        return info
-                except ValueError:
-                    pass
-        except (IOError, OSError):
-            pass
 
     # 4. No tracked submission yet → PENDING
     job_id = entry.get('job_id')
@@ -871,27 +876,30 @@ def _format_pair_cell(run_name, statuses, health_lookup=None):
     # type: (str, Dict[str, Dict[str, Any]], Optional[Dict[str, Optional[Dict[str, Any]]]]) -> str
     info = statuses[run_name]
     base = "{:<30s} {}".format(run_name[:30], _fmt_status(info['status']))
-    if info['status'] in ('RUNNING', 'QUEUED') and info['rminus1'] is not None:
-        base += "  R-1={:.3f}".format(info['rminus1'])
-    elif info['status'] == 'CONVERGED' and info['rminus1'] is not None:
-        base += "  R-1={:.3f}".format(info['rminus1'])
 
-    # Health indicator for RUNNING runs older than HEALTH_STATUS_MIN_HOURS
-    if info['status'] == 'RUNNING' and health_lookup is not None:
+    if info['status'] == 'CONVERGED' and info['rminus1'] is not None:
+        # Final certified R-1 from .progress / .sh epilogue — the certified value
+        base += "  " + _c("R-1={:.3f}".format(info['rminus1']), 'green')
+
+    elif info['status'] == 'RUNNING':
+        health = health_lookup.get(run_name) if health_lookup else None
         elapsed_h = (info.get('elapsed_seconds') or 0) / 3600.0
-        if elapsed_h >= HEALTH_STATUS_MIN_HOURS and run_name in health_lookup:
-            tag = _format_health_tag(health_lookup[run_name])
+        if health is not None and elapsed_h >= HEALTH_STATUS_MIN_HOURS:
+            tag = _format_health_tag(health)
             if tag:
                 base += "  " + tag
+        else:
+            base += "  " + _c("[warming up]", 'gray')
 
-    # pad to align column
+    # pad to align column (bumped to accommodate dual-R-1 tag)
     visible_len = _visible_length(base)
-    if visible_len < 42:
-        base += " " * (42 - visible_len)
-        
+    if visible_len < 60:
+        base += " " * (60 - visible_len)
+
     if info.get('chain_warning'):
         base += "  " + _c("⚠ " + info['chain_warning'], 'red')
     return base
+
 
 def _visible_length(s):
     # type: (str) -> int
@@ -1370,8 +1378,11 @@ def cmd_resubmit(arg, all_runs, state):
             return
         targets = [arg]
 
+    _prompt_cmb_cpu_bump([all_runs[rn] for rn in targets])
+
     for rn in targets:
         job_id = submit_run(all_runs[rn])
+        
         if job_id:
             entry = state.get(rn, {})
             entry.update({
@@ -1390,10 +1401,12 @@ def cmd_resubmit(arg, all_runs, state):
 # ============================================================================
 
 def cmd_restart(run_name, all_runs, state):
-    """Wipe a run's outputs/log/err + state entry, then submit fresh.
+    """RESTART (cold) — wipe ALL chain history and submit fresh.
 
-    Use this when the chain files are poisoned (bad sampler config, corrupted
-    checkpoint, etc.) and you want a clean restart, NOT a resume.
+    Use when chain files are poisoned (bad sampler config, corrupted checkpoint,
+    learned proposal that won't recover). This is the cold-start command: NO
+    covmat is preserved from the existing chains. For a warm restart that
+    preserves the chain-learned proposal, use `reset` instead.
     """
     if run_name not in all_runs:
         print(_c("  Unknown run: {}".format(run_name), 'red'))
@@ -1404,18 +1417,25 @@ def cmd_restart(run_name, all_runs, state):
     output_dir = os.path.join(folder, 'outputs')
     info = get_status(run_name, all_runs, state)
 
+    # ── Upfront plan ────────────────────────────────────────────────────
     print()
-    print(_c("  RESTART — {}".format(run_name), 'bold'))
+    print(_c("  RESTART (cold start) — {}".format(run_name), 'bold'))
+    print("  " + "─" * 65)
     print("  Current status: " + _fmt_status(info['status']))
-    print(_c("  This will:", 'yellow'))
+    print(_c("  Reset preserves the chain-learned covmat; restart does NOT.", 'gray'))
+    print()
+    print(_c("  Destructive steps:", 'yellow'))
     if info['status'] in ('RUNNING', 'QUEUED'):
         print("    1. scancel job {}".format(info['job_id']))
     print("    2. delete all chain/output files in {}/".format(output_dir))
     print("    3. delete {}.log and {}.err".format(run_name, run_name))
     print("    4. clear state-file entry for this run")
+    print(_c("  Submission step (separate confirmation):", 'cyan'))
     print("    5. submit a fresh run (NO --resume; starts from scratch)")
     print()
-    ans = input(_c("  Confirm? [y/N]: ", 'cyan'))
+
+    # ── Stage 1: confirm destructive ────────────────────────────────────
+    ans = input(_c("  Proceed with destructive steps 1–4? [y/N]: ", 'cyan'))
     if ans.strip().lower() not in ('y', 'yes'):
         print("  Aborted.")
         return
@@ -1462,6 +1482,18 @@ def cmd_restart(run_name, all_runs, state):
     save_state(state)
     print(_c("    ✓ cleared state-file entry", 'green'))
 
+    # ── CMB CPU bump (optional) ─────────────────────────────────────────
+    _prompt_cmb_cpu_bump([cfg])
+
+    # ── Stage 2: confirm submission ─────────────────────────────────────
+    print()
+    ans = input(_c("  Submit fresh now? [y/N]: ", 'cyan'))
+    if ans.strip().lower() not in ('y', 'yes'):
+        log_event("Restarted {} -> PENDING (chains wiped, not submitted)".format(run_name))
+        print("  Run is now PENDING (chains wiped, no covmat preserved).")
+        print("  Submit later with: python run_manager.py submit {}".format(run_name))
+        return
+
     # 5. submit fresh
     job_id = submit_run(cfg)
     if job_id:
@@ -1474,7 +1506,7 @@ def cmd_restart(run_name, all_runs, state):
         save_state(state)
         log_event("Restarted {} as job {} (fresh, chains wiped)".format(run_name, job_id))
         print(_c("    ✓ submitted fresh as job {}".format(job_id), 'green'))
-
+        
 
 # ============================================================================
 #  COMMAND: reset <run_name>
@@ -1534,8 +1566,13 @@ def _dump_covmat_from_chains(run_name, all_runs):
 
 
 def cmd_reset(run_name, all_runs, state):
-    """Dump covmat from existing chains, edit YAML to use it, wipe outputs/
-    and log/err, then optionally resubmit."""
+    """RESET (warm restart) — preserve chain-learned covmat, wipe chains, resubmit.
+
+    Use when YAML was regenerated and cobaya --resume refuses due to settings
+    mismatch, BUT you want to keep the proposal the chains learned. The covmat
+    is dumped to {run_name}.covmat, the YAML is pointed at it, then chains are
+    wiped. For a cold start (no covmat preserved), use `restart` instead.
+    """
     if run_name not in all_runs:
         print(_c("  Unknown run: {}".format(run_name), 'red'))
         return
@@ -1543,40 +1580,56 @@ def cmd_reset(run_name, all_runs, state):
     cfg = all_runs[run_name]
     folder = os.path.join(RUNS_ROOT, cfg['folder_path'])
     output_dir = os.path.join(folder, 'outputs')
+    yaml_path = os.path.join(folder, run_name + '.yaml')
     info = get_status(run_name, all_runs, state)
 
-    print()
-    print(_c("  RESET — {}".format(run_name), 'bold'))
-    print("  Current status: " + _fmt_status(info['status']))
-
-    # ── Guard: need chain files to dump from ────────────────────────────
+    # ── Guards before showing plan ──────────────────────────────────────
     n_chains = _count_chain_files(folder, run_name)
     if n_chains == 0:
-        print(_c("  [ERROR] No chain files found in {}/".format(output_dir), 'red'))
-        print("  Nothing to dump. Use 'restart' for a clean start without covmat,")
-        print("  or 'submit' to resubmit with the current YAML as-is.")
+        print(_c("  [ERROR] No chain files in {}/ — nothing to dump from.".format(output_dir), 'red'))
+        print("  Use 'restart' for a clean start without preserving a covmat,")
+        print("  or 'submit' to use the current YAML as-is.")
         return
 
-    # ── Warn if CONVERGED ───────────────────────────────────────────────
+    # ── Upfront plan ────────────────────────────────────────────────────
+    print()
+    print(_c("  RESET (warm restart) — {}".format(run_name), 'bold'))
+    print("  " + "─" * 65)
+    print("  Current status: " + _fmt_status(info['status']))
+    print("  Chain files on disk: {}".format(n_chains))
+    print(_c("  Restart wipes everything; reset preserves the chain-learned covmat.", 'gray'))
+    print()
+    print(_c("  Destructive steps:", 'yellow'))
+    print("    1. dump covmat from existing chains  →  {}.covmat".format(run_name))
+    print("    2. edit YAML 'covmat:' line to point at the new covmat")
+    if info['status'] in ('RUNNING', 'QUEUED'):
+        print("    3. scancel job {}".format(info.get('job_id')))
+    print("    4. delete outputs/ (chain files)")
+    print("    5. delete .log and .err")
+    print("    6. clear state-file entry")
+    print(_c("  Submission step (separate confirmation):", 'cyan'))
+    print("    7. submit with new covmat (cold MCMC start, warm proposal)")
+    print()
+
+    # Warn if CONVERGED
     if info['status'] == 'CONVERGED':
         print(_c("  WARNING: this run appears CONVERGED (R-1={}).".format(
             info.get('rminus1', '?')), 'yellow'))
-        ans = input(_c("  Reset a converged run? [y/N]: ", 'cyan'))
-        if ans.strip().lower() not in ('y', 'yes'):
-            print("  Aborted.")
-            return
 
-    print("  Found {} chain file(s). Dumping covmat...".format(n_chains))
+    # ── Stage 1: confirm destructive ────────────────────────────────────
+    ans = input(_c("  Proceed with destructive steps 1–6? [y/N]: ", 'cyan'))
+    if ans.strip().lower() not in ('y', 'yes'):
+        print("  Aborted.")
+        return
 
-    # ── Step 1: dump covmat from chains ─────────────────────────────────
+    # 1. dump covmat from chains
     covmat_path = _dump_covmat_from_chains(run_name, all_runs)
     if covmat_path is None:
         print(_c("  Aborting reset — covmat dump failed.", 'red'))
         return
     print(_c("    ✓ Wrote {}".format(covmat_path), 'green'))
 
-    # ── Step 2: edit YAML covmat: line ──────────────────────────────────
-    yaml_path = os.path.join(folder, run_name + '.yaml')
+    # 2. edit YAML covmat: line
     covmat_re = re.compile(r'^( {4}covmat:\s*)(.*)$', re.MULTILINE)
     try:
         with open(yaml_path) as f:
@@ -1599,7 +1652,7 @@ def cmd_reset(run_name, all_runs, state):
         f.write(new_yaml)
     print(_c("    ✓ YAML covmat: → {}.covmat".format(run_name), 'green'))
 
-    # ── Step 3: scancel if active ───────────────────────────────────────
+    # 3. scancel if active
     if info['status'] in ('RUNNING', 'QUEUED') and info.get('job_id'):
         try:
             r = subprocess.run(['scancel', str(info['job_id'])],
@@ -1614,12 +1667,12 @@ def cmd_reset(run_name, all_runs, state):
         except (subprocess.SubprocessError, OSError) as e:
             print(_c("    ! scancel exception: {}".format(e), 'yellow'))
 
-    # ── Step 4: delete outputs/ ─────────────────────────────────────────
+    # 4. delete outputs/
     if os.path.isdir(output_dir):
         shutil.rmtree(output_dir)
     print(_c("    ✓ deleted outputs/", 'green'))
 
-    # ── Step 5: delete .log and .err (prevents false CONVERGED) ─────────
+    # 5. delete .log and .err
     for ext in ('.log', '.err'):
         p = os.path.join(folder, run_name + ext)
         if os.path.exists(p):
@@ -1629,14 +1682,17 @@ def cmd_reset(run_name, all_runs, state):
                 pass
     print(_c("    ✓ deleted .log and .err", 'green'))
 
-    # ── Step 6: clear state entry ───────────────────────────────────────
+    # 6. clear state entry
     state.pop(run_name, None)
     save_state(state)
     print(_c("    ✓ cleared state-file entry", 'green'))
 
-    # ── Step 7: prompt resubmit ─────────────────────────────────────────
+    # ── CMB CPU bump (optional) ─────────────────────────────────────────
+    _prompt_cmb_cpu_bump([cfg])
+
+    # ── Stage 2: confirm submission ─────────────────────────────────────
     print()
-    ans = input(_c("  Submit now? [y/N]: ", 'cyan'))
+    ans = input(_c("  Submit now (with new covmat)? [y/N]: ", 'cyan'))
     if ans.strip().lower() in ('y', 'yes'):
         job_id = submit_run(cfg)
         if job_id:
@@ -1655,7 +1711,8 @@ def cmd_reset(run_name, all_runs, state):
             run_name))
         print("  Run is now PENDING with the new YAML + chain-learned covmat.")
         print("  Submit later with: python run_manager.py submit {}".format(run_name))
-
+        
+        
 
 # ============================================================================
 #  COMMAND: submit <run_name>  (canonical name; `resubmit` is now an alias)
@@ -1673,6 +1730,8 @@ def cmd_submit(arg, all_runs, state):
         print(_c("  Unknown run: {}".format(arg), 'red'))
         return
     targets = [arg]
+
+    _prompt_cmb_cpu_bump([all_runs[rn] for rn in targets])
 
     for rn in targets:
         job_id = submit_run(all_runs[rn])
@@ -1717,6 +1776,25 @@ def _read_log_tail_lines(log_path, n_lines=100):
         return lines[-n_lines:]
     except (IOError, OSError):
         return []
+    
+    
+def _log_contains_converged(log_path, n_lines=50):
+    # type: (str, int) -> bool
+    """Check if cobaya's 'The run has converged!' termination message appears
+    in the last n_lines of the .log file. This is the ONLY trusted CONVERGED
+    signal — threshold-based R-1 detection false-positives on transient
+    sub-threshold readings when CL R-1 has not yet been met.
+    """
+    if not os.path.exists(log_path):
+        return False
+    
+    try:
+        with open(log_path, 'r') as f:
+            tail = deque(f, maxlen=n_lines)
+    except (IOError, OSError):
+        return False
+        
+    return any('run has converged!' in line.lower() for line in tail)
 
 
 def _print_getdist_summary(run_name, all_runs):
@@ -1840,6 +1918,39 @@ def cmd_tail(N_arg, state_arg, all_runs, state):
                     print(_c("  Rminus1_last: {:.5f}".format(statuses[rn]['rminus1']), 'magenta'))
                 print(_c(bar, 'magenta'))
                 _print_getdist_summary(rn, all_runs)
+
+                
+def cmd_tail_one(run_name, all_runs, state):
+    # type: (str, Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]) -> None
+    """Show last 300 lines of the .log for one specific run, with status header."""
+    if run_name not in all_runs:
+        print(_c("  Unknown run: {}".format(run_name), 'red'))
+        return
+
+    cfg = all_runs[run_name]
+    info = get_status(run_name, all_runs, state)
+    log_path = os.path.join(RUNS_ROOT, cfg['folder_path'], run_name + '.log')
+    _, color = STATUS_SYMBOL[info['status']]
+
+    extras = []
+    if info['rminus1']    is not None: extras.append("R-1={:.4f}".format(info['rminus1']))
+    if info['n_samples']  is not None: extras.append("samples={}".format(info['n_samples']))
+    if info['acceptance'] is not None: extras.append("accept={:.3f}".format(info['acceptance']))
+    extras_str = "  ".join(extras)
+
+    bar = "═" * 70
+    print()
+    print(_c(bar, color))
+    print(_c("  {}  [{}]  {}".format(run_name, info['status'], extras_str), color))
+    print(_c(bar, color))
+
+    lines = _read_log_tail_lines(log_path, 300)
+    if not lines:
+        print(_c("    (no .log on disk yet)", 'gray'))
+    else:
+        for line in lines:
+            print("  " + line.rstrip())
+    print()
 
 
 # ============================================================================
@@ -2327,6 +2438,67 @@ def _gelman_rubin_per_param(weights_list, params_list):
     return R_minus_1
 
 
+def _weighted_quantile(values, weights, q):
+    # type: (Any, Any, float) -> float
+    """Weighted quantile via linear interpolation of the empirical CDF."""
+    sorter = np.argsort(values)
+    v = values[sorter]
+    w = weights[sorter].astype(float)
+    cum = np.cumsum(w)
+    if cum[-1] <= 0:
+        return float(np.nan)
+    cum /= cum[-1]
+    return float(np.interp(q, cum, v))
+
+
+def _gelman_rubin_cl_per_param(weights_list, params_list, cl_level=0.6827):
+    # type: (List[Any], List[Any], float) -> Any
+    """Compute Brooks-Gelman R-1 on CONFIDENCE-INTERVAL BOUNDS per param.
+
+    For each parameter and each chain, computes the weighted lower/upper bounds
+    at the given CL (default 1σ ≈ 68.27%, i.e. 15.87/84.13 percentiles), then
+    forms a dimensionless tail-convergence statistic:
+
+        R_CL ≈ max[ Var_j(L_j), Var_j(U_j) ] / mean_j[ ((U_j - L_j) / 2)^2 ]
+
+    Probes tail mixing — slower than means R-1, especially for curved posteriors.
+    Returns numpy array, one R-1 value per parameter (max of lower/upper).
+    """
+    M = len(weights_list)
+    P = params_list[0].shape[1]
+
+    lo_q = 0.5 - cl_level / 2.0
+    hi_q = 0.5 + cl_level / 2.0
+
+    L = np.zeros((M, P))
+    U = np.zeros((M, P))
+
+    for j in range(M):
+        w = weights_list[j]
+        theta = params_list[j]
+        for p in range(P):
+            L[j, p] = _weighted_quantile(theta[:, p], w, lo_q)
+            U[j, p] = _weighted_quantile(theta[:, p], w, hi_q)
+
+    half_width = (U - L) / 2.0
+
+    if M > 1:
+        B_L = L.var(axis=0, ddof=1)
+        B_U = U.var(axis=0, ddof=1)
+    else:
+        B_L = np.zeros(P)
+        B_U = np.zeros(P)
+
+    W_sigma2 = (half_width ** 2).mean(axis=0)
+    W_safe = np.where(W_sigma2 > 0, W_sigma2, 1e-30)
+
+    R_L = B_L / W_safe
+    R_U = B_U / W_safe
+
+    return np.maximum(np.maximum(R_L, R_U), 0.0)
+
+
+
 def _compute_health(folder, run_name):
     # type: (str, str) -> Optional[Dict[str, Any]]
     """Full health computation for one run. Returns health dict or None."""
@@ -2403,7 +2575,8 @@ def _compute_health(folder, run_name):
     if n_min < HEALTH_MIN_SAMPLES:
         return {'verdict': 'EARLY', 'n_samples': int(sum(w.sum() for w in burned_weights)),
                 'chain_lengths': chain_lengths_raw,
-                'rminus1': None, 'trajectory': [], 'per_param': {},
+                'rminus1': None, 'rminus1_cl': None,
+                'trajectory': [], 'per_param': {},
                 'bottleneck': None, 'n_eff': 0,
                 'acceptance': None, 'timestamp': datetime.now().isoformat()}
 
@@ -2419,6 +2592,11 @@ def _compute_health(folder, run_name):
     # ── Current R-1 (from full post-burn-in chains) ─────────────────────
     r1_per_param = _gelman_rubin_per_param(burned_weights, burned_params)
     rminus1 = float(r1_per_param.max())
+
+    # CL R-1: GR on 1σ confidence-interval bounds — probes tail mixing.
+    # Cobaya stops only when BOTH means R-1 AND CL R-1 are below their thresholds.
+    r1_cl_per_param = _gelman_rubin_cl_per_param(burned_weights, burned_params)
+    rminus1_cl = float(r1_cl_per_param.max())
 
     per_param = {}
     bottleneck = None
@@ -2447,11 +2625,12 @@ def _compute_health(folder, run_name):
     n_samples = int(sum(w.sum() for w in burned_weights))
 
     # ── Verdict ─────────────────────────────────────────────────────────
-    verdict = _health_verdict(trajectory, rminus1, acceptance)
+    verdict = _health_verdict(trajectory, rminus1, rminus1_cl, acceptance)
 
     return {
         'timestamp': datetime.now().isoformat(),
         'rminus1': round(rminus1, 4),
+        'rminus1_cl': round(rminus1_cl, 4),
         'trajectory': [[f, round(r, 4)] for f, r in trajectory],
         'per_param': per_param,
         'bottleneck': bottleneck,
@@ -2463,15 +2642,23 @@ def _compute_health(folder, run_name):
     }
 
 
-def _health_verdict(trajectory, rminus1, acceptance):
-    # type: (List[Tuple[float, float]], float, float) -> str
-    """Classify convergence health from trajectory and current diagnostics."""
+def _health_verdict(trajectory, rminus1, rminus1_cl, acceptance):
+    # type: (List[Tuple[float, float]], float, Optional[float], float) -> str
+    """Classify convergence health from trajectory and BOTH R-1 diagnostics.
+
+    Cobaya stops when means R-1 < 0.02 AND CL R-1 < 0.2 jointly. The verdict
+    reflects both:
+      EARLY      — not enough samples to assess
+      STUCK      — acceptance crashed or R-1 flat/rising at high values
+      TAILS      — means R-1 done but CL R-1 still high (tails not mixed)
+      ALMOST     — both R-1s near their thresholds
+      CONVERGING — R-1 dropping toward thresholds
+      SLOW       — R-1 dropping slowly, often with poor acceptance
+    """
     if rminus1 is None:
         return 'EARLY'
-    if rminus1 < 0.05:
-        return 'ALMOST'
 
-    # Trend: slope of R-1 over the last 3+ trajectory points
+    # Trend on means R-1 over the last 3+ trajectory points
     if len(trajectory) >= 3:
         recent = trajectory[-3:]
         r_vals = [r for _, r in recent]
@@ -2481,16 +2668,23 @@ def _health_verdict(trajectory, rminus1, acceptance):
         decreasing = False
         flat_or_rising = True
 
+    # STUCK dominates everything
     if acceptance < 0.10:
         return 'STUCK'
     if flat_or_rising and rminus1 > 0.5:
         return 'STUCK'
+
+    # Means converged-or-nearly: decide between TAILS, ALMOST
+    if rminus1 < 0.05:
+        if rminus1_cl is not None and rminus1_cl > 0.3:
+            return 'TAILS'   # means done, tails still lagging → cobaya keeps running
+        return 'ALMOST'
+
+    # Means not yet near threshold
     if decreasing and acceptance < 0.15:
         return 'SLOW'
     if decreasing:
         return 'CONVERGING'
-
-    # Not clearly decreasing but not obviously stuck
     if rminus1 < 0.3:
         return 'CONVERGING'
     return 'SLOW'
@@ -2532,7 +2726,8 @@ def _health_age_hours(health):
 
 VERDICT_DISPLAY = {
     'CONVERGING': ('↓CONV',   'green'),
-    'ALMOST':     ('↓ALMOST', 'green'),
+    'ALMOST':     ('≈ALMOST', 'cyan'),
+    'TAILS':      ('⤬TAILS',  'yellow'),
     'SLOW':       ('→SLOW',   'yellow'),
     'STUCK':      ('✗STUCK',  'red'),
     'EARLY':      ('…EARLY',  'gray'),
@@ -2541,17 +2736,32 @@ VERDICT_DISPLAY = {
 
 def _format_health_tag(health):
     # type: (Optional[Dict[str, Any]]) -> str
-    """Short health indicator for the status table."""
+    """Short health indicator for the status table.
+
+    Shows both means R-1 and CL R-1 (cobaya's stopping criterion is conjunctive).
+    Format: 'R-1=<means>/<cl> <verdict>'. If cache is stale, the whole tag
+    desaturates to gray regardless of verdict.
+    """
     if health is None:
         return ''
     verdict = health.get('verdict', '')
     display, color = VERDICT_DISPLAY.get(verdict, ('?', 'gray'))
     age = _health_age_hours(health)
-    stale = '?' if age > HEALTH_CACHE_MAX_AGE_H else ''
-    r1 = health.get('rminus1')
-    if r1 is not None:
-        return _c('R-1={:.2f} {}{}'.format(r1, display, stale), color)
-    return _c('{}{}'.format(display, stale), color)
+    is_stale = age > HEALTH_CACHE_MAX_AGE_H
+    if is_stale:
+        color = 'gray'
+
+    r1    = health.get('rminus1')
+    r1_cl = health.get('rminus1_cl')
+    stale = '?' if is_stale else ''
+
+    if r1 is not None and r1_cl is not None:
+        body = 'R-1={:.2f}/{:.2f} {}{}'.format(r1, r1_cl, display, stale)
+    elif r1 is not None:
+        body = 'R-1={:.2f} {}{}'.format(r1, display, stale)
+    else:
+        body = '{}{}'.format(display, stale)
+    return _c(body, color)
 
 
 def _print_health_report(run_name, health):
@@ -2570,9 +2780,16 @@ def _print_health_report(run_name, health):
     chains = health.get('chain_lengths', [])
     n_chains = len(chains)
     acc_str = "{:.2f}".format(acc) if acc is not None else "?"
+    
+    r1     = health.get('rminus1')
+    r1_cl  = health.get('rminus1_cl')
+    r1_str    = "{:.4f}".format(r1)    if r1    is not None else "?"
+    r1_cl_str = "{:.4f}".format(r1_cl) if r1_cl is not None else "?"
     print("  Samples: {:,} (post-burn-in)    Acceptance: {}    Chains: {}/{}".format(
         n_samp, acc_str, n_chains, EXPECTED_CHAIN_COUNT))
-
+    print("  R-1 (means): {}    R-1 (CL):    {}    (cobaya stops when both below 0.02 / 0.2)".format(
+        r1_str, r1_cl_str))
+    
     # Chain length consistency
     if chains and len(chains) > 1:
         min_c, max_c = min(chains), max(chains)
@@ -2617,15 +2834,273 @@ def _print_health_report(run_name, health):
     verdict_messages = {
         'CONVERGING': 'R-1 dropping steadily. Be patient.',
         'ALMOST':     'Nearly converged — just needs a bit more time.',
+        'TAILS':      'Means R-1 met but CL R-1 still high — tails not mixed. Cobaya correctly keeps running.',
         'SLOW':       'R-1 decreasing but slowly. Acceptance may be low — proposal could be poor.',
-        'STUCK':      'R-1 is flat or rising. Consider restart with a fresh covmat (reset command).',
+        'STUCK':      'R-1 is flat or rising. Consider reset (warm) or restart (cold).',
         'EARLY':      'Not enough post-burn-in samples to assess convergence yet.',
     }
     msg = verdict_messages.get(verdict, '')
     print("  Verdict: {} — {}".format(_c(v_display, v_color), msg))
     print()
 
+# ============================================================================
+#  COMMAND: diagnose <run_name>
+#  Deep-dive on one specific run: health + YAML settings + recent errors +
+#  pattern-matched recommendations. More detailed than `health <run_name>`.
+# ============================================================================
 
+def _read_yaml_settings(folder, run_name):
+    # type: (str, str) -> Dict[str, str]
+    """Pull a handful of sampler/likelihood settings from the run's YAML
+    without a full parse — regex on the lines we care about."""
+    yaml_path = os.path.join(folder, run_name + '.yaml')
+    out = {}
+    if not os.path.exists(yaml_path):
+        return out
+    try:
+        with open(yaml_path) as f:
+            text = f.read()
+    except (IOError, OSError):
+        return out
+    patterns = {
+        'drag':             r'^\s*drag:\s*(\S+)',
+        'oversample_power': r'^\s*oversample_power:\s*(\S+)',
+        'proposal_scale':   r'^\s*proposal_scale:\s*(\S+)',
+        'covmat':           r'^\s*covmat:\s*(\S+)',
+        'Rminus1_stop':     r'^\s*Rminus1_stop:\s*(\S+)',
+        'Rminus1_cl_stop':  r'^\s*Rminus1_cl_stop:\s*(\S+)',
+        'learn_every':      r"^\s*learn_every:\s*'?(\S+?)'?\s*$",
+    }
+    for key, pat in patterns.items():
+        m = re.search(pat, text, re.MULTILINE)
+        if m:
+            out[key] = m.group(1)
+    return out
+
+
+def _count_class_errors(err_path, max_bytes=200000):
+    # type: (str, int) -> Tuple[int, List[str]]
+    """Count CLASS shooting failures in the .err file tail. Returns
+    (count, sample_distinct_errors)."""
+    if not os.path.exists(err_path):
+        return 0, []
+    try:
+        size = os.path.getsize(err_path)
+        with open(err_path, 'rb') as f:
+            if size > max_bytes:
+                f.seek(-max_bytes, 2)
+            text = f.read().decode('utf-8', errors='ignore')
+    except (IOError, OSError):
+        return 0, []
+    lines = text.splitlines()
+    error_markers = ('Could not find', 'shooting failed', 'CosmoComputationError',
+                     'CosmoSevereError', 'background_solve')
+    matches = [l for l in lines if any(m in l for m in error_markers)]
+    distinct = []
+    seen = set()
+    for line in matches[-30:]:                                # last 30 only
+        key = line[:80]
+        if key not in seen:
+            seen.add(key)
+            distinct.append(line.strip()[:120])
+        if len(distinct) >= 3:
+            break
+    return len(matches), distinct
+
+
+def _diagnose_recommendations(cfg, health, yaml_settings, err_count, status):
+    # type: (Dict[str, Any], Optional[Dict[str, Any]], Dict[str, str], int, str) -> List[str]
+    """Pattern-match diagnostics → list of actionable advice strings."""
+    recs = []
+    if health is None:
+        recs.append("No health cache. Run `health {}` first.".format(cfg['run_name']))
+        return recs
+
+    verdict    = health.get('verdict', '?')
+    acc        = health.get('acceptance')
+    rminus1    = health.get('rminus1')
+    rminus1_cl = health.get('rminus1_cl')
+    traj       = health.get('trajectory', [])
+    chains     = health.get('chain_lengths', [])
+    drag_on    = yaml_settings.get('drag', '?') == 'true'
+    is_exo     = cfg.get('model') == 'exo'
+    has_uvlf   = cfg.get('has_uvlf', False)
+    shmr       = cfg.get('shmr')
+
+    # — Pathway-2 pattern (the big one) —
+    if (is_exo and has_uvlf and shmr in ('vbeta', 'vshmr') and drag_on
+            and acc is not None and acc < 0.15):
+        recs.append("PATHWAY-2 PATTERN: exo+UVLF+{}+drag with acceptance={:.2f}. "
+                    "This is the dragged-CLASS recomputation bug. "
+                    "Reset with drag=false (see exo_uvlf_bg_cmb_vshmr_full precedent).".format(
+                        shmr, acc))
+
+    # — Covmat-trapped pattern —
+    is_plateauing = False
+    if len(traj) >= 3:
+        r_vals = [r for _, r in traj[-3:]]
+        is_plateauing = (max(r_vals) - min(r_vals)) / max(max(r_vals), 0.001) < 0.15
+    if acc is not None and acc > 0.65 and is_plateauing and rminus1 is not None and rminus1 > 0.1:
+        recs.append("COVMAT TOO TIGHT: acceptance={:.2f} with R-1={:.2f} plateauing. "
+                    "Proposal is much smaller than the actual posterior — likely from a "
+                    "covmat dumped while chains were stuck in a sub-region. "
+                    "Reset with covmat: auto.".format(acc, rminus1))
+
+    # — TAILS-only —
+    if verdict == 'TAILS':
+        recs.append("TAILS-only: means R-1 converged but CL R-1 still {:.2f}. "
+                    "Cobaya correctly continues. Tail mixing is slow for curved posteriors — "
+                    "this can take 2-5x longer than means convergence. Just wait.".format(
+                        rminus1_cl if rminus1_cl is not None else 0.0))
+
+    # — Chain imbalance —
+    if chains and len(chains) > 1:
+        spread = (max(chains) - min(chains)) / max(max(chains), 1)
+        if spread > 0.4:
+            recs.append("CHAIN IMBALANCE ({:.0%} spread): {}. "
+                        "Some ranks are lagging. Check .err for CLASS failures; "
+                        "consider `doctor {}` if persistent.".format(spread, chains, cfg['run_name']))
+
+    # — Many CLASS errors —
+    if err_count > 20:
+        recs.append("HEAVY CLASS FAILURES ({} hits in .err). "
+                    "Pathway-1 (extreme parameters hitting shooting walls). "
+                    "Compute is being wasted on rejections — tighter exo priors would help, "
+                    "or accept the loss.".format(err_count))
+
+    # — Trajectory rising —
+    if len(traj) >= 3 and traj[-1][1] > traj[-3][1] * 1.2:
+        recs.append("R-1 RISING: trajectory went {:.2f} → {:.2f} → {:.2f}. "
+                    "Likely a recent covmat relearn; wait one more learn cycle "
+                    "({}) before deciding.".format(
+                        traj[-3][1], traj[-2][1], traj[-1][1],
+                        yaml_settings.get('learn_every', '?')))
+
+    if not recs:
+        recs.append("No pathology detected. Run is progressing normally for its state.")
+    return recs
+
+
+def cmd_diagnose(run_name, all_runs, state):
+    # type: (str, Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]) -> None
+    """Deep-dive diagnostic for one run: extends `health` with YAML settings,
+    error-file scan, recent log activity, and pattern-matched advice."""
+    if run_name not in all_runs:
+        print(_c("  Unknown run: {}".format(run_name), 'red'))
+        return
+
+    cfg = all_runs[run_name]
+    folder = os.path.join(RUNS_ROOT, cfg['folder_path'])
+    info = get_status(run_name, all_runs, state)
+
+    print()
+    print(_c("  DIAGNOSE — {}".format(run_name), 'bold'))
+    print("  " + "═" * 65)
+
+    # ── Status + config block ───────────────────────────────────────────
+    print(_c("  Configuration:", 'bold'))
+    print("    Status:     {}".format(_fmt_status(info['status'])))
+    print("    Model:      {}    SHMR: {}    Z-cut: {}".format(
+        cfg.get('model', '?'), cfg.get('shmr', '?'), cfg.get('zcut', '?')))
+    flags = []
+    if cfg.get('has_uvlf'): flags.append('UVLF')
+    if cfg.get('has_bg'):   flags.append('BG')
+    if cfg.get('has_cmb'):  flags.append('CMB')
+    print("    Likelihoods: {}".format(' + '.join(flags) if flags else '(none)'))
+    print("    N sampled:   {}".format(cfg.get('n_sampled_params', '?')))
+    print("    Job ID:      {}".format(info.get('job_id') or '—'))
+
+    # ── YAML sampler settings ───────────────────────────────────────────
+    print()
+    print(_c("  Sampler settings (from YAML):", 'bold'))
+    yaml_settings = _read_yaml_settings(folder, run_name)
+    for key in ('drag', 'oversample_power', 'proposal_scale', 'covmat',
+                'Rminus1_stop', 'Rminus1_cl_stop', 'learn_every'):
+        val = yaml_settings.get(key, '?')
+        print("    {:<18s} {}".format(key + ':', val))
+
+    # ── Health: compute fresh, don't trust cache for diagnose ──────────
+    print()
+    print(_c("  Convergence health:", 'bold'))
+    
+    try:
+        health = _compute_health(folder, run_name)
+    except Exception as e:
+        print(_c("    [Failed to compute health: {}]".format(e), 'red'))
+        health = None
+
+    if health is not None:
+        n_samp = health.get('n_samples', 0)
+        acc    = health.get('acceptance')
+        r1     = health.get('rminus1')
+        r1_cl  = health.get('rminus1_cl')
+        verdict = health.get('verdict', '?')
+        v_display, v_color = VERDICT_DISPLAY.get(verdict, ('?', 'gray'))
+        chains = health.get('chain_lengths', [])
+
+        print("    Samples (post-burn): {:,}".format(n_samp))
+        print("    Acceptance:          {}".format(
+            "{:.3f}".format(acc) if acc is not None else "?"))
+        print("    R-1 (means):         {}    stop: {}".format(
+            "{:.4f}".format(r1) if r1 is not None else "?",
+            yaml_settings.get('Rminus1_stop', '?')))
+        print("    R-1 (CL):            {}    stop: {}".format(
+            "{:.4f}".format(r1_cl) if r1_cl is not None else "?",
+            yaml_settings.get('Rminus1_cl_stop', '?')))
+        print("    Chains: {}".format(chains))
+        print("    Verdict:             {}".format(_c(v_display, v_color)))
+
+        # Trajectory
+        traj = health.get('trajectory', [])
+        if traj:
+            print()
+            print(_c("  R-1 means trajectory:", 'bold'))
+            max_r1 = max(r for _, r in traj)
+            for frac, r1v in traj:
+                bar_len = max(1, int(28 * r1v / max(max_r1, 0.001)))
+                marker = '  ← current' if frac >= 0.99 else ''
+                print("    {:>4.0f}%  {:<28s}  {:.4f}{}".format(
+                    frac * 100, '█' * bar_len, r1v, marker))
+
+        # Per-parameter
+        per_param = health.get('per_param', {})
+        if per_param:
+            bottleneck = health.get('bottleneck', '')
+            print()
+            print(_c("  Per-parameter R-1 (means):", 'bold'))
+            for name, val in sorted(per_param.items(), key=lambda x: -x[1]):
+                marker = _c(" ◄ bottleneck", 'yellow') if name == bottleneck else ""
+                print("    {:<20s}  {:.4f}{}".format(name, val, marker))
+
+    # ── Error scan ──────────────────────────────────────────────────────
+    err_path = os.path.join(folder, run_name + '.err')
+    err_count, err_samples = _count_class_errors(err_path)
+    print()
+    print(_c("  CLASS failures in .err:", 'bold'))
+    if err_count == 0:
+        print("    None.")
+    else:
+        print("    Count: {}".format(err_count))
+        for line in err_samples:
+            print(_c("      ~ {}".format(line), 'gray'))
+
+    # ── Recent log tail ─────────────────────────────────────────────────
+    log_path = os.path.join(folder, run_name + '.log')
+    tail = _read_log_tail_lines(log_path, n_lines=10)
+    if tail:
+        print()
+        print(_c("  Last 10 log lines:", 'bold'))
+        for line in tail:
+            print(_c("    " + line.rstrip(), 'gray'))
+
+    # ── Recommendations ─────────────────────────────────────────────────
+    recs = _diagnose_recommendations(cfg, health, yaml_settings, err_count, info['status'])
+    print()
+    print(_c("  Recommendations:", 'bold'))
+    for r in recs:
+        print(_c("    • ", 'cyan') + r)
+    print()
+    
 def cmd_health(args, all_runs, state):
     # type: (List[str], Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]) -> None
     """Compute and display chain-based convergence health diagnostics.
@@ -2721,17 +3196,23 @@ Usage:
   python run_manager.py resume                   # un-pause daemon (paused runs stay paused; use resubmit)
   python run_manager.py drain                    # scancel active jobs (back to PENDING)
   python run_manager.py submit <run_name>        # sbatch a single run (preserves chains)
+  
   python run_manager.py resubmit <run_name>      # alias of submit, intended for STALLED runs
   python run_manager.py resubmit --all-stalled   # batch-resume all STALLED runs
+  
   python run_manager.py resubmit --all-paused    # bring all PAUSED runs back (cobaya --resume)
   python run_manager.py restart <run_name>       # WIPE chains + fresh submit
   python run_manager.py reset <run_name>         # dump covmat from chains + wipe outputs + fresh start
   python run_manager.py reset-failed             # wipe chains+state of all FAILED runs → PENDING
   python run_manager.py health <run_name>        # chain-based convergence diagnostics (bypasses .progress)
   python run_manager.py health <N|all> <state>   # health for N random (or all) runs in given state
+  python run_manager.py diagnose <run_name>      # deep-dive: health + YAML settings + errors + advice
+  
+  python run_manager.py tail <run_name>          # last 300 .log lines of one specific run
   python run_manager.py tail <N|all> <state>     # last 100 .log lines of N runs
                                                  # state: running|queued|failed|converged|stalled|pending|zombie|paused
                                                  # converged also offers a getdist summary
+                                                 
   python run_manager.py storage                  # disk usage by status + projection
   python run_manager.py storage --top            # also list top-10 biggest runs
   python run_manager.py storage --all            # also list every run by size
@@ -2857,11 +3338,30 @@ def main():
             sys.exit(1)
         cmd_health(sys.argv[2:], all_runs, state)
 
-    elif cmd == 'tail':
-        if len(sys.argv) < 4:
-            print("  Usage: python run_manager.py tail <N|all> <running|queued|failed|converged|stalled|pending>")
+    elif cmd == 'diagnose':
+        if len(sys.argv) < 3:
+            print("  Usage: python run_manager.py diagnose <run_name>")
             sys.exit(1)
-        cmd_tail(sys.argv[2], sys.argv[3], all_runs, state)
+        cmd_diagnose(sys.argv[2], all_runs, state)
+
+    elif cmd == 'tail':
+        if len(sys.argv) < 3:
+            print("  Usage: python run_manager.py tail <run_name>            # 300 lines, one run")
+            print("         python run_manager.py tail <N|all> <state>       # 100 lines each, N runs")
+            sys.exit(1)
+        # If arg 2 is a known run name, single-run 300-line mode.
+        # Otherwise treat as <N|all> <state> which needs arg 3 too.
+        if sys.argv[2] in all_runs:
+            cmd_tail_one(sys.argv[2], all_runs, state)
+        elif len(sys.argv) >= 4:
+            cmd_tail(sys.argv[2], sys.argv[3], all_runs, state)
+        else:
+            print(_c("  '{}' is not a known run, and only one arg given.".format(sys.argv[2]), 'red'))
+            print("  Usage: python run_manager.py tail <run_name>")
+            print("         python run_manager.py tail <N|all> <state>")
+            sys.exit(1)
+            
+            
         
     elif cmd == 'doctor':
         if len(sys.argv) < 3:

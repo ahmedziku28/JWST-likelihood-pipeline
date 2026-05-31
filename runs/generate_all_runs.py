@@ -447,12 +447,20 @@ def make_yaml(cfg):
 
     L.append("")
 
-    # Sampler — drag/oversampling require >= 2 distinct parameter speed blocks.
-    # A fast block exists only when SHMR nuisance params are sampled (vbeta/vshmr)
-    # AND there is a UVLF likelihood for them to feed. Otherwise every sampled
-    # param goes through CLASS, the speed-block count collapses to 1, and cobaya
-    # rejects with the misleading 'all parameters have the same speed' error.
-    has_fast_block = cfg['has_uvlf'] and cfg.get('shmr') in ('vbeta', 'vshmr')
+    # Disable drag/oversampling specifically for exo+UVLF+vshmr. Empirically:
+    #   - exo+vbeta+drag+UVLF+CMB:   fine (R-1 dropping at acc=0.34)
+    #   - lcdm+vshmr+drag+UVLF+CMB:  fine (R-1=0.07 at acc=0.31)
+    #   - exo+vshmr+drag+UVLF:       broken (stalls, severe chain imbalance)
+    #   - exo+vshmr+drag+UVLF+CMB:   broken (was the original case)
+    # The pathology requires exo + vshmr + drag jointly; CMB amplifies cost
+    # but isn't required to trigger. Vbeta's 1 fast param vs vshmr's 3 is
+    # presumably the difference in failure threshold.
+    is_exo_vshmr = (cfg.get('model') == 'exo' and cfg.get('shmr') == 'vshmr')
+    has_fast_block = (
+        cfg['has_uvlf']
+        and cfg.get('shmr') in ('vbeta', 'vshmr')
+        and not is_exo_vshmr
+    )
     drag_val           = 'true' if has_fast_block else 'false'
     oversample_pow_val = '0.4'  if has_fast_block else '0'
 
