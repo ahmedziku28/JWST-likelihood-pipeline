@@ -97,7 +97,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: lcdm_bg_cmb.covmat
+    covmat: auto
     drag: false
     oversample_power: 0
     proposal_scale: 1.9

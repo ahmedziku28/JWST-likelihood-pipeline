@@ -144,8 +144,8 @@ params:
 sampler:
   mcmc:
     covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/builders/builder_exo_vshmr/outputs/builder_exo_vshmr.covmat
-    drag: true
-    oversample_power: 0.4
+    drag: false
+    oversample_power: 0
     proposal_scale: 1.9
     Rminus1_stop: 0.02
     Rminus1_cl_stop: 0.2

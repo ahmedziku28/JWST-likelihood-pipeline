@@ -146,7 +146,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/builders/builder_exo_vbeta/outputs/builder_exo_vbeta.covmat
+    covmat: auto
     drag: true
     oversample_power: 0.4
     proposal_scale: 1.9
