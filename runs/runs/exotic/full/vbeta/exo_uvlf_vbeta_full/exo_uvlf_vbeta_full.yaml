@@ -28,6 +28,7 @@ likelihood:
 # ── Polygon physicality prior (H^2(z) >= 0) ────────────────
 prior:
   h2_positivity: "lambda a_samp, s: 0.0 if s >= (-0.07202 * a_samp - 1381.5969) else -1e500"
+  e2_pre_class: "__import__('likelihood.exo_de_priors', fromlist=['_']).e2_safety_pre_class"
 
 # ── Parameters ─────────────────────────────────────────────
 params:

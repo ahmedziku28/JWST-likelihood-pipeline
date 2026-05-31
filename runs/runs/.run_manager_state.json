@@ -118,11 +118,11 @@
     "last_known_status": "PENDING"
   },
   "exo_uvlf_bg_cmb_fixed_full": {
-    "attempts": 2,
+    "attempts": 1,
     "auto_resubmit_attempts": 0,
-    "job_id": "28990",
+    "job_id": "29016",
     "last_known_status": "RUNNING",
-    "submitted_at": "2026-05-30T03:07:09.417171"
+    "submitted_at": "2026-05-31T17:28:01.118610"
   },
   "exo_uvlf_bg_cmb_fixed_restr": {
     "last_known_status": "PENDING"
@@ -166,9 +166,9 @@
   "exo_uvlf_fixed_restr": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
-    "job_id": "28978",
+    "job_id": "29019",
     "last_known_status": "RUNNING",
-    "submitted_at": "2026-05-29T05:13:27.636580"
+    "submitted_at": "2026-05-31T17:31:01.822973"
   },
   "exo_uvlf_vbeta_full": {
     "last_known_status": "PENDING"
@@ -180,11 +180,11 @@
     "last_known_status": "PENDING"
   },
   "exo_uvlf_vshmr_restr": {
-    "attempts": 1,
+    "attempts": 2,
     "auto_resubmit_attempts": 0,
-    "job_id": "29015",
-    "last_known_status": "PENDING",
-    "submitted_at": "2026-05-31T07:26:10.302880"
+    "job_id": "29020",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-05-31T17:52:11.562012"
   },
   "lcdm_bg": {
     "last_known_status": "PENDING"
@@ -290,7 +290,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29000",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-05-30T08:16:00.521720"
   },
   "lcdm_primer_fixed_restr": {
@@ -311,18 +311,19 @@
   "lcdm_uvlf_bg_cmb_fixed_full": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
-    "job_id": "29003",
+    "job_id": "29017",
     "last_known_status": "RUNNING",
-    "submitted_at": "2026-05-30T17:38:51.698598"
+    "submitted_at": "2026-05-31T17:28:26.668329"
   },
   "lcdm_uvlf_bg_cmb_fixed_restr": {
     "last_known_status": "PENDING"
   },
   "lcdm_uvlf_bg_cmb_vbeta_full": {
     "attempts": 1,
-    "job_id": "28973",
+    "auto_resubmit_attempts": 0,
+    "job_id": "29018",
     "last_known_status": "RUNNING",
-    "submitted_at": "2026-05-29T05:00:24.967292"
+    "submitted_at": "2026-05-31T17:28:41.126679"
   },
   "lcdm_uvlf_bg_cmb_vbeta_restr": {
     "last_known_status": "PENDING"

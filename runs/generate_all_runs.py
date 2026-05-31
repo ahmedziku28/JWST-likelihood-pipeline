@@ -231,13 +231,12 @@ def make_yaml(cfg):
             intercept_str = "- {}".format(abs(POLY_INTERCEPT))
         L.append('  h2_positivity: "lambda a_samp, s: 0.0 if s >= ({} * a_samp {}) else -1e500"'.format(
             POLY_SLOPE, intercept_str))
+        
         # Pre-CLASS E² safety check (rejects worst-case Ω_m proposals that
         # would crash CLASS's background ODE / θ_s shooter). Defined in
         # pipeline/exo_de_priors.py. Only meaningful when ω_b and ω_cdm
-        # are sampled (any run with bg or CMB likelihood — i.e. any
-        # production exo run except the pure-UVLF ones at fixed cosmology).
-        if cfg['has_bg'] or cfg['has_cmb']:
-            L.append("  e2_pre_class: \"__import__('likelihood.exo_de_priors', fromlist=['_']).e2_safety_pre_class\"")
+        # are sampled
+        L.append("  e2_pre_class: \"__import__('likelihood.exo_de_priors', fromlist=['_']).e2_safety_pre_class\"")
         L.append("")
 
 
