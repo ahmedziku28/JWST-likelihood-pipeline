@@ -6,7 +6,7 @@
 #SBATCH --error=exo_bg_cmb.err
 #SBATCH --ntasks=8
 #SBATCH --time=175:00:00
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=8000
 
 echo "======================================================"

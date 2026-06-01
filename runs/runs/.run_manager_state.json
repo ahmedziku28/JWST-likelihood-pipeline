@@ -7,7 +7,11 @@
     "submitted_at": "2026-05-30T05:16:18.572178"
   },
   "exo_bg_cmb": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29022",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-06-01T13:59:24.791512"
   },
   "exo_ceers_bg_cmb_fixed_full": {
     "last_known_status": "PENDING"
@@ -191,7 +195,11 @@
     "submitted_at": "2026-05-31T17:52:11.562012"
   },
   "lcdm_bg": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29023",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-06-01T13:59:31.339170"
   },
   "lcdm_bg_cmb": {
     "attempts": 1,
