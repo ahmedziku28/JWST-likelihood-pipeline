@@ -857,19 +857,49 @@ def cmd_status(all_runs, state):
         print(_c("    These may have silently lost MPI ranks. Investigate with `tail` or `doctor`.", 'yellow'))
         print()
         
-    # ETA estimate (very rough): assume converged runs averaged 24h wallclock
-    running = counts['RUNNING'] + counts['QUEUED']
-    pending = counts['PENDING'] + counts['STALLED']
-    if running > 0 and pending >= 0:
-        # crude: if N slots running in parallel, total remaining ~ pending/N * 24h + (24h for current)
-        print(_c("  Rough ETA estimate", 'bold'))
-        print("    {} active jobs, {} pending. At ~24 h/run with {} parallel slots,".format(
-            running, pending, running))
-        if running > 0:
-            est_hours = 24.0 * (1.0 + pending / max(running, 1))
-            print("    remaining campaign time ≈ {:.1f} h (≈ {:.1f} days)".format(
-                est_hours, est_hours / 24.0))
-        print()
+    # ── ETA based on per-run .progress extrapolation (only for RUNNING) ──
+    _refresh_calibration_if_needed(all_runs, statuses)
+
+    running_runs = [rn for rn, info in statuses.items() if info['status'] == 'RUNNING']
+    if running_runs:
+        eta_means = []
+        eta_cl    = []
+        skipped_n = 0
+        for rn in running_runs:
+            cfg = all_runs[rn]
+            ppath = os.path.join(RUNS_ROOT, cfg['folder_path'],
+                                 'outputs', rn + '.progress')
+            eta = _compute_eta_from_progress(ppath)
+            m = eta.get('means_eta_h')
+            c = eta.get('cl_eta_h')
+            if m is not None:
+                eta_means.append((rn, m))
+            if c is not None:
+                eta_cl.append((rn, c))
+            if m is None and c is None:
+                skipped_n += 1
+
+        if eta_means or eta_cl:
+            print(_c("  ETA (RUNNING runs only, from .progress extrapolation):", 'bold'))
+            if eta_means:
+                eta_means.sort(key=lambda x: -x[1])
+                bottleneck = eta_means[0]
+                print("    Means R-1 → 0.02:  longest = {} at ~{:.1f}h".format(
+                    bottleneck[0], bottleneck[1]))
+            if eta_cl:
+                eta_cl.sort(key=lambda x: -x[1])
+                bottleneck = eta_cl[0]
+                print("    CL R-1   → 0.20:  longest = {} at ~{:.1f}h".format(
+                    bottleneck[0], bottleneck[1]))
+            if skipped_n > 0:
+                print(_c("    ({} run(s) not yet predictable — too early or non-monotone)".format(
+                    skipped_n), 'gray'))
+            print(_c("    Note: per-run ETAs only; PENDING runs not counted.", 'gray'))
+            print()
+        elif skipped_n > 0:
+            print(_c("  ETA: no RUNNING runs are in the decay regime yet.", 'gray'))
+            print()
+            
 
 
 def _format_pair_cell(run_name, statuses, health_lookup=None):
@@ -2497,7 +2527,371 @@ def _gelman_rubin_cl_per_param(weights_list, params_list, cl_level=0.6827):
 
     return np.maximum(np.maximum(R_L, R_U), 0.0)
 
+# ============================================================================
+#  ETA ESTIMATION — extrapolate convergence time from .progress trajectory
+# ============================================================================
 
+ETA_MIN_POINTS         = 4       # minimum filtered .progress rows for a fit
+ETA_MAX_PROGRESS_AGE_H = 6.0     # refuse if last .progress entry older than this
+                                 # (wider window tolerates Lustre cache lag on login node)
+ETA_BURN_R1_CUTOFF     = 10.0     # drop rows with R-1 > 10 as burn-in
+ETA_MIN_ALPHA          = 0.10    # below this, decay too flat to extrapolate
+ETA_TARGET_MEANS       = 0.02    # cobaya's Rminus1_stop
+ETA_TARGET_CL          = 0.20    # cobaya's Rminus1_cl_stop
+
+
+def _load_progress_history(progress_path):
+    # type: (str) -> List[Tuple[int, datetime, float, Optional[float]]]
+    """Read .progress file → list of (N, ts, R-1, R-1_cl). Filters out
+    header line and any row with non-numeric N. R-1_cl is None when 'NaN'."""
+    if not os.path.exists(progress_path):
+        return []
+    rows = []
+    try:
+        with open(progress_path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+                parts = line.split()
+                if len(parts) < 4:
+                    continue
+                try:
+                    N = int(float(parts[0]))
+                    ts = datetime.fromisoformat(parts[1])
+                    r1 = float(parts[3])
+                    r1_cl_raw = parts[4] if len(parts) >= 5 else 'NaN'
+                    r1_cl = None if r1_cl_raw.lower() == 'nan' else float(r1_cl_raw)
+                except (ValueError, IndexError):
+                    continue
+                rows.append((N, ts, r1, r1_cl))
+    except (IOError, OSError):
+        return []
+    return rows
+
+
+def _estimate_rate_from_progress(history, n_recent=3):
+    # type: (List[Tuple[int, datetime, float, Optional[float]]], int) -> Optional[Tuple[float, int, datetime]]
+    """Median dN/dt from the last n_recent .progress rows. Returns
+    (samples_per_sec, last_N, last_ts), or None if stale (last entry > ETA_MAX_PROGRESS_AGE_H h)
+    or insufficient data."""
+    if len(history) < 2:
+        return None
+    last_ts = history[-1][1]
+    age_h = (datetime.now() - last_ts).total_seconds() / 3600.0
+    if age_h > ETA_MAX_PROGRESS_AGE_H:
+        return None
+    use = history[-min(n_recent + 1, len(history)):]
+    rates = []
+    for i in range(1, len(use)):
+        dN = use[i][0] - use[i - 1][0]
+        dt = (use[i][1] - use[i - 1][1]).total_seconds()
+        if dt > 0 and dN > 0:
+            rates.append(dN / dt)
+    if not rates:
+        return None
+    rates.sort()
+    median_rate = rates[len(rates) // 2]
+    return (median_rate, history[-1][0], last_ts)
+
+
+def _fit_decay(N_arr, R_arr):
+    # type: (Any, Any) -> Optional[Tuple[float, float, float]]
+    """Log-log linear fit of R-1 = C / N^alpha. Returns (alpha, C, R²) or None
+    if degenerate. Caller must pre-filter (positive values, enough points)."""
+    if len(N_arr) < ETA_MIN_POINTS:
+        return None
+    log_N = np.log(N_arr)
+    log_R = np.log(R_arr)
+    mean_x = log_N.mean()
+    mean_y = log_R.mean()
+    Sxx = ((log_N - mean_x) ** 2).sum()
+    Sxy = ((log_N - mean_x) * (log_R - mean_y)).sum()
+    if Sxx <= 0:
+        return None
+    slope = Sxy / Sxx          # = -alpha
+    intercept = mean_y - slope * mean_x  # = log(C)
+    alpha = -slope
+    C = float(np.exp(intercept))
+    SS_tot = ((log_R - mean_y) ** 2).sum()
+    SS_res = ((log_R - (intercept + slope * log_N)) ** 2).sum()
+    R2 = 1.0 - SS_res / SS_tot if SS_tot > 0 else 0.0
+    return float(alpha), C, float(R2)
+
+
+def _fit_branch(rows, target, rate, n_now, for_calibration=False):
+    # type: (List[Tuple[int, float]], float, Optional[float], int, bool) -> Dict[str, Any]
+    """Fit log-linear R-1 = C / N^alpha on rows = [(N, R-1)].
+
+    Returns dict with alpha, C, R2, eta_h, status. Statuses:
+      'ok'                       — fit + ETA both valid
+      'ok_no_rate'               — fit valid, ETA not computed (no rate)
+      'already_below_threshold'  — fit valid, run is already past threshold
+      'too_flat'                 — fit returned alpha < ETA_MIN_ALPHA
+      'non_monotone'             — last 3 R-1 not strictly decreasing (ETA suppressed)
+      'fit_failed'               — log-log regression degenerate
+      'insufficient_data'        — fewer than ETA_MIN_POINTS rows
+
+    When for_calibration=True, monotonicity check is skipped (we want the
+    fit regardless of tail noise on a converged run).
+    """
+    out = {'alpha': None, 'C': None, 'R2': None,
+           'eta_h': None, 'status': 'insufficient_data'}
+    if len(rows) < ETA_MIN_POINTS:
+        return out
+
+    N_arr = np.array([n for n, _ in rows], dtype=float)
+    R_arr = np.array([r for _, r in rows], dtype=float)
+    fit = _fit_decay(N_arr, R_arr)
+    if fit is None:
+        out['status'] = 'fit_failed'
+        return out
+    alpha, C, R2 = fit
+    out['alpha'] = alpha
+    out['C']     = C
+    out['R2']    = R2
+
+    if alpha < ETA_MIN_ALPHA:
+        out['status'] = 'too_flat'
+        return out
+
+    # If we're already below the target threshold, fit is valid but no
+    # ETA needs to be computed.
+    if R_arr[-1] < target:
+        out['status'] = 'already_below_threshold'
+        out['eta_h'] = 0.0
+        return out
+
+    # Monotonicity check only blocks runtime ETA, not the fit itself.
+    last3 = R_arr[-3:]
+    is_monotone = (last3[0] > last3[1] > last3[2])
+    if not for_calibration and not is_monotone:
+        out['status'] = 'non_monotone'
+        return out
+
+    if rate is None:
+        out['status'] = 'ok_no_rate'
+        return out
+
+    N_star = (C / target) ** (1.0 / alpha)
+    samples_needed = N_star - n_now
+    if samples_needed <= 0:
+        out['status'] = 'already_below_threshold'
+        out['eta_h'] = 0.0
+    else:
+        out['status'] = 'ok'
+        out['eta_h'] = samples_needed / rate / 3600.0
+    return out
+
+
+def _compute_eta_from_progress(progress_path, for_calibration=False):
+    # type: (str, bool) -> Dict[str, Any]
+    """Full ETA pipeline. See _fit_branch for status meanings.
+
+    When for_calibration=True, the staleness check on the rate estimate is
+    skipped (so old .progress files from converged runs can still be fit),
+    and the non-monotone tail check inside the per-branch fit is skipped.
+    """
+    out = {
+        'means_eta_h': None, 'means_alpha': None, 'means_C': None,
+        'means_R2': None, 'means_status': 'no_progress_file',
+        'cl_eta_h': None, 'cl_alpha': None, 'cl_C': None,
+        'cl_R2': None, 'cl_status': 'no_progress_file',
+        'n_now': None, 'rate_samples_per_sec': None, 'last_ts': None,
+    }
+    history = _load_progress_history(progress_path)
+    if not history:
+        return out
+
+    rate_info = _estimate_rate_from_progress(history)
+    if rate_info is None:
+        if not for_calibration:
+            out['means_status'] = 'stale'
+            out['cl_status']    = 'stale'
+            return out
+        # Calibration mode: no rate is fine, but we still need n_now / last_ts.
+        rate, n_now, last_ts = None, history[-1][0], history[-1][1]
+    else:
+        rate, n_now, last_ts = rate_info
+
+    out['n_now']                = n_now
+    out['rate_samples_per_sec'] = rate
+    out['last_ts']              = last_ts.isoformat()
+
+    # Filter burn-in: drop rows where means R-1 is above cutoff.
+    converging = [(n, r1, r1_cl) for n, _, r1, r1_cl in history
+                  if r1 is not None and r1 > 0 and r1 < ETA_BURN_R1_CUTOFF]
+
+    # Build per-branch row lists directly — no destructuring trickery.
+    means_rows = [(n, r1)    for n, r1, _    in converging if r1    is not None and r1    > 0]
+    cl_rows    = [(n, r1_cl) for n, _,  r1_cl in converging if r1_cl is not None and r1_cl > 0]
+
+    means_fit = _fit_branch(means_rows, ETA_TARGET_MEANS, rate, n_now, for_calibration)
+    cl_fit    = _fit_branch(cl_rows,    ETA_TARGET_CL,    rate, n_now, for_calibration)
+
+    for k in ('alpha', 'C', 'R2', 'eta_h', 'status'):
+        out['means_' + k] = means_fit[k]
+        out['cl_'    + k] = cl_fit[k]
+    return out
+
+
+def _format_eta_lines(eta, calibration_summary=None):
+    # type: (Dict[str, Any], Optional[Dict[str, Any]]) -> List[str]
+    """Format ETA dict into a few human-readable lines. Returns list of
+    strings (caller prints them indented)."""
+    lines = []
+    status_msg = {
+        'no_progress_file':        'no .progress file yet',
+        'stale':                   '.progress > {:.1f}h old; job may be dead'.format(ETA_MAX_PROGRESS_AGE_H),
+        'insufficient_data':       'too few post-burn-in points (need ≥ {})'.format(ETA_MIN_POINTS),
+        'non_monotone':            'recent R-1 non-monotone (probably mid-relearn); retry later',
+        'too_flat':                'decay rate α < {:.2f} — extrapolation unreliable'.format(ETA_MIN_ALPHA),
+        'already_below_threshold': 'already below threshold (cobaya should stop soon)',
+        'fit_failed':              'log-log fit failed',
+    }
+
+    for label, target in [('means R-1', ETA_TARGET_MEANS),
+                          ('CL R-1   ', ETA_TARGET_CL)]:
+        key = 'means' if 'means' in label else 'cl'
+        status = eta.get(key + '_status', 'no_progress_file')
+        eta_h  = eta.get(key + '_eta_h')
+        a      = eta.get(key + '_alpha')
+        R2     = eta.get(key + '_R2')
+        if status == 'ok' and eta_h is not None:
+            lines.append("  {} → {:.2f}:  ~{:.1f}h  (α={:.2f}, R²={:.2f})".format(
+                label, target, eta_h, a, R2))
+        else:
+            lines.append("  {} → {:.2f}:  {}".format(
+                label, target, status_msg.get(status, status)))
+
+    if calibration_summary:
+        lines.append("  Reference α from {} converged run(s): {}".format(
+            calibration_summary['n'], calibration_summary['alphas_str']))
+    return lines
+
+# ── Calibration: store (α, C) from converged runs for cross-run reference ──
+
+ETA_CALIBRATION_FILE = os.path.join(RUNS_ROOT, '.eta_calibration.json')
+
+
+def _load_eta_calibration():
+    # type: () -> Dict[str, Dict[str, Any]]
+    if not os.path.exists(ETA_CALIBRATION_FILE):
+        return {}
+    try:
+        with open(ETA_CALIBRATION_FILE) as f:
+            return json.load(f).get('entries', {})
+    except (IOError, OSError, ValueError):
+        return {}
+
+
+def _save_eta_calibration(entries):
+    # type: (Dict[str, Dict[str, Any]]) -> None
+    payload = {
+        'last_updated': datetime.now().isoformat(),
+        'entries': entries,
+    }
+    tmp = ETA_CALIBRATION_FILE + '.tmp'
+    try:
+        with open(tmp, 'w') as f:
+            json.dump(payload, f, indent=2)
+        os.replace(tmp, ETA_CALIBRATION_FILE)
+    except (IOError, OSError):
+        pass
+
+
+def _build_calibration_entry(run_name, cfg):
+    # type: (str, Dict[str, Any]) -> Optional[Dict[str, Any]]
+    """Fit α, C from a converged run's .progress file. Returns entry dict
+    or None if the .progress isn't fittable."""
+    progress_path = os.path.join(RUNS_ROOT, cfg['folder_path'],
+                                 'outputs', run_name + '.progress')
+    
+    eta = _compute_eta_from_progress(progress_path, for_calibration=True)
+    
+    if eta.get('means_alpha') is None and eta.get('cl_alpha') is None:
+        return None
+    return {
+        'computed_at':       datetime.now().isoformat(),
+        'model':             cfg.get('model'),
+        'shmr':              cfg.get('shmr'),
+        'has_uvlf':          cfg.get('has_uvlf'),
+        'has_bg':            cfg.get('has_bg'),
+        'has_cmb':           cfg.get('has_cmb'),
+        'n_sampled_params':  cfg.get('n_sampled_params'),
+        'alpha_means':       eta.get('means_alpha'),
+        'C_means':           eta.get('means_C'),
+        'R2_means':          eta.get('means_R2'),
+        'alpha_cl':          eta.get('cl_alpha'),
+        'C_cl':              eta.get('cl_C'),
+        'R2_cl':             eta.get('cl_R2'),
+    }
+
+
+def _refresh_calibration_if_needed(all_runs, statuses):
+    # type: (Dict[str, Any], Dict[str, Dict[str, Any]]) -> None
+    """If any CONVERGED run lacks a calibration entry, build it.
+    Called opportunistically — cheap when nothing's changed."""
+    entries = _load_eta_calibration()
+    dirty = False
+    for rn, info in statuses.items():
+        if info['status'] != 'CONVERGED':
+            continue
+        if rn in entries:
+            continue
+        cfg = all_runs[rn]
+        new_entry = _build_calibration_entry(rn, cfg)
+        if new_entry is not None:
+            entries[rn] = new_entry
+            dirty = True
+            log_event("ETA calibration: added entry for {} (α_means={:.3f})".format(
+                rn, new_entry.get('alpha_means') or float('nan')))
+    if dirty:
+        _save_eta_calibration(entries)
+
+
+def _calibration_summary(entries):
+    # type: (Dict[str, Dict[str, Any]]) -> Dict[str, Any]
+    """Summary of calibration alphas for display."""
+    alphas = [e['alpha_means'] for e in entries.values()
+              if e.get('alpha_means') is not None]
+    if not alphas:
+        return {'n': 0, 'alphas_str': '—'}
+    return {
+        'n': len(alphas),
+        'alphas_str': ', '.join('{:.2f}'.format(a) for a in sorted(alphas)),
+    }
+
+
+def cmd_calibrate(all_runs, state):
+    # type: (Dict[str, Any], Dict[str, Any]) -> None
+    """Rebuild ETA calibration from all CONVERGED runs from scratch."""
+    statuses = get_all_statuses(all_runs, state, log_transitions=False)
+    converged = [rn for rn, info in statuses.items() if info['status'] == 'CONVERGED']
+    print()
+    print(_c("  ETA calibration — rebuilding from {} CONVERGED run(s)".format(
+        len(converged)), 'bold'))
+    if not converged:
+        print("    No CONVERGED runs to calibrate from.")
+        return
+    entries = {}
+    for rn in converged:
+        cfg = all_runs[rn]
+        entry = _build_calibration_entry(rn, cfg)
+        if entry is None:
+            print(_c("    {} — could not fit (.progress missing or unfittable)".format(rn),
+                    'yellow'))
+            continue
+        entries[rn] = entry
+        print("    {} — α_means={:.3f}  α_cl={}  R²={:.2f}".format(
+            rn,
+            entry.get('alpha_means') or float('nan'),
+            "{:.3f}".format(entry['alpha_cl']) if entry.get('alpha_cl') else "—",
+            entry.get('R2_means') or 0.0))
+    _save_eta_calibration(entries)
+    print(_c("  Saved {} entries to {}".format(len(entries), ETA_CALIBRATION_FILE), 'green'))
+    print()
+    
 
 def _compute_health(folder, run_name):
     # type: (str, str) -> Optional[Dict[str, Any]]
@@ -2639,6 +3033,7 @@ def _compute_health(folder, run_name):
         'acceptance': round(acceptance, 4),
         'chain_lengths': chain_lengths_raw,
         'verdict': verdict,
+        '_progress_path': os.path.join(folder, 'outputs', run_name + '.progress'),
     }
 
 
@@ -2841,7 +3236,30 @@ def _print_health_report(run_name, health):
     }
     msg = verdict_messages.get(verdict, '')
     print("  Verdict: {} — {}".format(_c(v_display, v_color), msg))
+
+    # ETA section (best-effort; quietly omitted on PENDING/early runs)
+    eta_progress_path = health.get('_progress_path')
+    if eta_progress_path:
+        eta = _compute_eta_from_progress(eta_progress_path)
+        if eta.get('means_status') != 'no_progress_file':
+            calib = _calibration_summary(_load_eta_calibration())
+            # Sanity: if fresh health already shows below threshold but .progress
+            # lags, the ETA extrapolation is obsolete. Flag it instead of misleading.
+            r1     = health.get('rminus1')
+            r1_cl  = health.get('rminus1_cl')
+            health_says_done = (
+                r1 is not None and r1 < ETA_TARGET_MEANS and
+                r1_cl is not None and r1_cl < ETA_TARGET_CL)
+            print()
+            print(_c("  ETA (extrapolated from .progress):", 'bold'))
+            if health_says_done:
+                print(_c("  health already shows R-1 below both thresholds — "
+                        "cobaya will detect at next check.", 'green'))
+            else:
+                for line in _format_eta_lines(eta, calib if calib['n'] > 0 else None):
+                    print("  " + line)
     print()
+    
 
 # ============================================================================
 #  COMMAND: diagnose <run_name>
@@ -3072,6 +3490,16 @@ def cmd_diagnose(run_name, all_runs, state):
                 marker = _c(" ◄ bottleneck", 'yellow') if name == bottleneck else ""
                 print("    {:<20s}  {:.4f}{}".format(name, val, marker))
 
+    # ── ETA ─────────────────────────────────────────────────────────────
+    progress_path = os.path.join(folder, 'outputs', run_name + '.progress')
+    eta = _compute_eta_from_progress(progress_path)
+    if eta.get('means_status') != 'no_progress_file':
+        calib = _calibration_summary(_load_eta_calibration())
+        print()
+        print(_c("  ETA (extrapolated from .progress):", 'bold'))
+        for line in _format_eta_lines(eta, calib if calib['n'] > 0 else None):
+            print("  " + line)
+
     # ── Error scan ──────────────────────────────────────────────────────
     err_path = os.path.join(folder, run_name + '.err')
     err_count, err_samples = _count_class_errors(err_path)
@@ -3208,6 +3636,11 @@ Usage:
   python run_manager.py health <N|all> <state>   # health for N random (or all) runs in given state
   python run_manager.py diagnose <run_name>      # deep-dive: health + YAML settings + errors + advice
   
+  
+  python run_manager.py diagnose <run_name>      # deep-dive: health + YAML settings + errors + advice
+  python run_manager.py calibrate                # rebuild ETA calibration from CONVERGED runs
+  
+  
   python run_manager.py tail <run_name>          # last 300 .log lines of one specific run
   python run_manager.py tail <N|all> <state>     # last 100 .log lines of N runs
                                                  # state: running|queued|failed|converged|stalled|pending|zombie|paused
@@ -3343,6 +3776,9 @@ def main():
             print("  Usage: python run_manager.py diagnose <run_name>")
             sys.exit(1)
         cmd_diagnose(sys.argv[2], all_runs, state)
+        
+    elif cmd == 'calibrate':
+        cmd_calibrate(all_runs, state)
 
     elif cmd == 'tail':
         if len(sys.argv) < 3:

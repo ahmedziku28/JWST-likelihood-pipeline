@@ -137,7 +137,11 @@
     "last_known_status": "PENDING"
   },
   "exo_uvlf_bg_cmb_vshmr_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29021",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-06-01T01:49:30.160918"
   },
   "exo_uvlf_bg_cmb_vshmr_restr": {
     "last_known_status": "PENDING"
