@@ -32,6 +32,7 @@ import getpass
 import json
 import os
 import re
+import signal
 import smtplib
 import subprocess
 import sys
@@ -51,12 +52,65 @@ EMAIL_CONFIG_FILE = os.path.expanduser('~/.run_manager_email.json')
 
 # ── Tunables ────────────────────────────────────────────────────────────────
 
-WATCH_POLL_SECONDS       = 300
+WATCH_POLL_SECONDS       = 2000
 STUCK_DEBOUNCE_HOURS     = 24.0
 PROGRESS_80_THRESHOLD    = 0.10
 DEAD_CHAIN_STALE_MINUTES = 30.0
 LOG_TAIL_LINES_FOR_EMAIL = 10
 SMTP_TIMEOUT_SECONDS     = 30
+
+
+# ── Daemon management ───────────────────────────────────────────────────────
+
+PIDFILE       = os.path.join(RUNS_ROOT, '.notifier.pid')
+WATCH_LOG     = os.path.join(RUNS_ROOT, '.notifier_watch.log')
+
+# ── Daemon PID file helpers ─────────────────────────────────────────────────
+
+def _read_pidfile():
+    if not os.path.isfile(PIDFILE):
+        return None
+    try:
+        with open(PIDFILE) as f:
+            return int(f.read().strip())
+    except (ValueError, IOError, OSError):
+        return None
+
+
+def _is_pid_alive(pid):
+    if pid is None:
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except OSError:
+        return False
+
+
+def _write_pidfile(pid):
+    try:
+        with open(PIDFILE, 'w') as f:
+            f.write(str(pid))
+    except (IOError, OSError):
+        pass
+
+
+def _remove_pidfile():
+    try:
+        os.remove(PIDFILE)
+    except OSError:
+        pass
+
+
+def _running_daemon_pid():
+    """Return PID if daemon is running, else None. Cleans stale PID files."""
+    pid = _read_pidfile()
+    if _is_pid_alive(pid):
+        return pid
+    if pid is not None:
+        _remove_pidfile()
+    return None
+
 
 # ── ANSI for terminal output (no external dep) ──────────────────────────────
 
@@ -931,36 +985,158 @@ def cmd_detect_once():
             vprint(c('alert: {} — {}'.format(a['kind'], a['run']), 'cyan'))
     return len(new_alerts)
 
-
-def cmd_watch():
-    """Long-running mode: detect + send loop every WATCH_POLL_SECONDS seconds."""
+def cmd_watch_daemon():
+    """Internal — the actual polling loop. Invoked as a detached subprocess
+    by cmd_watch. Writes all output to WATCH_LOG. Handles SIGTERM cleanly."""
     config = load_email_config()
     if config is None:
-        print(c('  No email config. Run: python notifier.py --setup', 'red'))
-        return
+        print('No email config; daemon cannot start.')
+        sys.exit(1)
 
-    print(c('  notifier --watch: detection + send every {}s. Ctrl-C to stop.'.format(
-        WATCH_POLL_SECONDS), 'bold'))
-    print(c('  (Run inside tmux/screen so it survives terminal disconnects.)', 'gray'))
-    print()
+    def _shutdown(signum, _frame):
+        vprint('daemon received signal {}, shutting down cleanly'.format(signum))
+        _remove_pidfile()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, _shutdown)
+    signal.signal(signal.SIGINT,  _shutdown)
+    signal.signal(signal.SIGHUP,  signal.SIG_IGN)   # survive terminal hangup
+
+    vprint('daemon started, polling every {}s'.format(WATCH_POLL_SECONDS))
 
     try:
         while True:
             n_new = cmd_detect_once()
             if n_new > 0:
                 sent, failed = cmd_send_pending()
-                vprint(c('detection cycle: {} new alerts, {} sent, {} failed'.format(
-                    n_new, sent, failed), 'gray'))
+                vprint('detection cycle: {} new alerts, {} sent, {} failed'.format(
+                    n_new, sent, failed))
             else:
-                # Still try to send any pending from previous SMTP failures
                 sent, failed = cmd_send_pending()
                 if sent > 0 or failed > 0:
-                    vprint(c('retried pending: {} sent, {} failed'.format(
-                        sent, failed), 'gray'))
+                    vprint('retried pending: {} sent, {} failed'.format(sent, failed))
             time.sleep(WATCH_POLL_SECONDS)
+    finally:
+        _remove_pidfile()
+
+
+def cmd_tail_watch_log():
+    """Attach to the running daemon's log via tail -f. Ctrl-C exits the tail
+    but leaves the daemon running."""
+    if not os.path.exists(WATCH_LOG):
+        print(c('  No watch log yet at {}'.format(WATCH_LOG), 'yellow'))
+        print(c('  (The daemon may have just started — try again in 10s.)', 'gray'))
+        return
+    print(c('  Attaching to daemon log. Ctrl-C exits THIS VIEW only — daemon keeps running.',
+            'gray'))
+    print(c('  Log file: {}'.format(WATCH_LOG), 'gray'))
+    print()
+    try:
+        subprocess.run(['tail', '-n', '20', '-f', WATCH_LOG])
     except KeyboardInterrupt:
+        pass
+    print()
+    pid = _running_daemon_pid()
+    if pid is not None:
+        print(c('  Detached from log view. Daemon still running (PID {}).'.format(pid),
+                'green'))
+        print(c('  Stop daemon with: python notifier.py --stop', 'gray'))
+    else:
+        print(c('  Detached. (Daemon does not appear to be running.)', 'yellow'))
+
+
+def cmd_watch():
+    """If daemon not running, spawn it detached; then attach the log tail."""
+    existing = _running_daemon_pid()
+    if existing is not None:
+        print(c('  Daemon already running (PID {})'.format(existing), 'green'))
         print()
-        print(c('  Stopped.', 'yellow'))
+        cmd_tail_watch_log()
+        return
+
+    if load_email_config() is None:
+        print(c('  No email config. Run: python notifier.py --setup', 'red'))
+        return
+
+    print(c('  Starting detached daemon...', 'bold'))
+    try:
+        log_fd = open(WATCH_LOG, 'a')
+        log_fd.write('\n--- daemon spawn at {} ---\n'.format(datetime.now().isoformat()))
+        log_fd.flush()
+        proc = subprocess.Popen(
+            [sys.executable, os.path.abspath(__file__), '--watch-daemon'],
+            stdout=log_fd,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,  # detach from controlling terminal
+            close_fds=True,
+        )
+    except Exception as e:
+        print(c('  Failed to spawn daemon: {}'.format(e), 'red'))
+        return
+
+    _write_pidfile(proc.pid)
+    time.sleep(1.5)  # give it a moment to actually start
+
+    if not _is_pid_alive(proc.pid):
+        _remove_pidfile()
+        print(c('  Daemon died immediately. Check log: {}'.format(WATCH_LOG), 'red'))
+        return
+
+    print(c('  ✓ Daemon started (PID {})'.format(proc.pid), 'green'))
+    print(c('    PID file:  {}'.format(PIDFILE), 'gray'))
+    print(c('    Log file:  {}'.format(WATCH_LOG), 'gray'))
+    print()
+    cmd_tail_watch_log()
+
+
+def cmd_stop():
+    pid = _running_daemon_pid()
+    if pid is None:
+        print(c('  No daemon running.', 'gray'))
+        return
+    print(c('  Stopping daemon (PID {})...'.format(pid), 'bold'))
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError as e:
+        print(c('  Could not signal daemon: {}'.format(e), 'red'))
+        return
+    for _ in range(10):
+        time.sleep(0.5)
+        if not _is_pid_alive(pid):
+            _remove_pidfile()
+            print(c('  ✓ Daemon stopped cleanly.', 'green'))
+            return
+    print(c('  Daemon did not exit in 5s. Sending SIGKILL.', 'yellow'))
+    try:
+        os.kill(pid, signal.SIGKILL)
+    except OSError:
+        pass
+    _remove_pidfile()
+    print(c('  ✓ Daemon killed.', 'green'))
+
+
+def cmd_daemon_status():
+    pid = _running_daemon_pid()
+    if pid is None:
+        print(c('  Daemon status: not running', 'yellow'))
+        if os.path.exists(WATCH_LOG):
+            print(c('  Last log:      {}'.format(WATCH_LOG), 'gray'))
+        return
+    print(c('  Daemon status: running (PID {})'.format(pid), 'green'))
+    print(c('  PID file:      {}'.format(PIDFILE), 'gray'))
+    print(c('  Log file:      {}'.format(WATCH_LOG), 'gray'))
+    if os.path.exists(WATCH_LOG):
+        try:
+            with open(WATCH_LOG) as f:
+                lines = deque(f, maxlen=8)
+            if lines:
+                print()
+                print(c('  Recent log output:', 'bold'))
+                for line in lines:
+                    print('    ' + line.rstrip())
+        except (IOError, OSError):
+            pass
 
 # ───────────────────────────────────────────────────────────────────────────
 # Entry point
@@ -978,7 +1154,13 @@ def main():
     parser.add_argument('--list', action='store_true',
                         help='show pending alerts without sending')
     parser.add_argument('--watch', action='store_true',
-                        help='background mode (poll every 5 min)')
+                        help='start (or reattach to) the daemon, then tail its log')
+    parser.add_argument('--watch-daemon', action='store_true',
+                        help=argparse.SUPPRESS)  # internal — used by --watch
+    parser.add_argument('--stop', action='store_true',
+                        help='stop the running daemon')
+    parser.add_argument('--status', action='store_true',
+                        help='show daemon status')
     parser.add_argument('--since', metavar='YYYY-MM-DD',
                         help='re-send all alerts after this date')
     parser.add_argument('--detect-only', action='store_true',
@@ -998,6 +1180,15 @@ def main():
         return 0
     if args.list:
         cmd_list()
+        return 0
+    if args.status:
+        cmd_daemon_status()
+        return 0
+    if args.stop:
+        cmd_stop()
+        return 0
+    if args.watch_daemon:
+        cmd_watch_daemon()
         return 0
     if args.watch:
         cmd_watch()
