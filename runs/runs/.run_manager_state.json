@@ -151,11 +151,7 @@
     "last_known_status": "PENDING"
   },
   "exo_uvlf_bg_fixed_full": {
-    "attempts": 1,
-    "auto_resubmit_attempts": 0,
-    "job_id": "29025",
-    "last_known_status": "RUNNING",
-    "submitted_at": "2026-06-02T17:58:29.844817"
+    "last_known_status": "PENDING"
   },
   "exo_uvlf_bg_fixed_restr": {
     "last_known_status": "PENDING"
