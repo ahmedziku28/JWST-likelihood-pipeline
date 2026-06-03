@@ -151,7 +151,11 @@
     "last_known_status": "PENDING"
   },
   "exo_uvlf_bg_fixed_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29027",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-06-03T04:47:17.937622"
   },
   "exo_uvlf_bg_fixed_restr": {
     "last_known_status": "PENDING"
@@ -332,7 +336,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29017",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-05-31T17:28:26.668329"
   },
   "lcdm_uvlf_bg_cmb_fixed_restr": {
