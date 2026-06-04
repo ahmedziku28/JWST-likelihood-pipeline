@@ -134,7 +134,7 @@
   "exo_uvlf_bg_cmb_vbeta_full": {
     "attempts": 1,
     "job_id": "29009",
-    "last_known_status": "RUNNING",
+    "last_known_status": "ZOMBIE",
     "submitted_at": "2026-05-30T18:41:57.800316"
   },
   "exo_uvlf_bg_cmb_vbeta_restr": {
