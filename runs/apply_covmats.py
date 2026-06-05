@@ -162,14 +162,16 @@ def params_of_run(cfg):
             out += ['shmr_beta']
         elif cfg['shmr'] == 'vshmr':
             out += ['shmr_log_Mc', 'shmr_N', 'shmr_beta']
-    # Note: A_planck and any other Planck nuisance parameters are NOT in the
-    # YAML's params: block (generate_all_runs.py never declares them). Cobaya's
-    # Planck likelihoods auto-inject them at runtime with default priors. The
-    # donor's .covmat file written by cobaya WILL contain rows for them, but
-    # the YAML's covmat directive references parameters by name, so omitting
-    # them here means we extract the non-nuisance submatrix from the donor and
-    # cobaya uses proposal-scale defaults for the auto-injected ones — exactly
-    # the same behavior as V1.
+    # CMB nuisance: A_planck is auto-injected by cobaya's planck_2018_*
+    # likelihoods at runtime — it is NOT declared in the YAML's params: block
+    # (generate_all_runs.py never lists it), but the chain DOES sample it and
+    # the donor's .covmat WILL contain its row + its (A_planck, logA) and
+    # (A_planck, tau) cross-correlations. Including it here preserves those
+    # correlations in the receiver's seeded covmat, avoiding the relearn cost
+    # for the (A_planck, logA) degeneracy ridge that otherwise stalls
+    # CMB-bearing warm-starts.
+    if cfg['has_cmb']:
+        out += ['A_planck']
     return out
 
 
@@ -191,10 +193,12 @@ def parameter_blocks(cfg):
             blocks['shmr'] = ['shmr_beta']
         elif cfg['shmr'] == 'vshmr':
             blocks['shmr'] = ['shmr_log_Mc', 'shmr_N', 'shmr_beta']
-    # No 'nuisance' block: A_planck etc. are auto-injected by the Planck
-    # likelihoods at runtime and never appear in the YAMLs themselves, so the
-    # matchmaker doesn't try to splice rows for them. Cobaya uses
-    # proposal-scale defaults for those parameters.
+    # Nuisance block: A_planck is auto-injected by cobaya's Planck likelihoods
+    # at runtime but DOES appear in donor .covmat files. Include it here so
+    # the matchmaker preserves its (A_planck, logA) and (A_planck, tau)
+    # cross-correlations in the seeded covmat.
+    if cfg['has_cmb']:
+        blocks['nuisance'] = ['A_planck']
     return blocks
 
 
