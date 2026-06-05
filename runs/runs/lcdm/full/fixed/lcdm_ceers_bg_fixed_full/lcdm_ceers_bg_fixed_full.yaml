@@ -95,7 +95,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: auto
+    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/lcdm/full/fixed/lcdm_ceers_bg_fixed_full/lcdm_ceers_bg_fixed_full.covmat
     drag: false
     oversample_power: 0
     proposal_scale: 1.9

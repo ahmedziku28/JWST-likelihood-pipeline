@@ -143,7 +143,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/builders/builder_exo_vshmr/outputs/builder_exo_vshmr.covmat
+    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/exotic/full/vshmr/exo_primer_bg_vshmr_full/exo_primer_bg_vshmr_full.covmat
     drag: false
     oversample_power: 0
     proposal_scale: 1.9

@@ -102,7 +102,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/builders/builder_lcdm_vbeta/outputs/builder_lcdm_vbeta.covmat
+    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/lcdm/restr/vbeta/lcdm_primer_bg_vbeta_restr/lcdm_primer_bg_vbeta_restr.covmat
     drag: true
     oversample_power: 0.4
     proposal_scale: 1.9

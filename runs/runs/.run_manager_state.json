@@ -10,7 +10,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29022",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-06-01T13:59:24.791512"
   },
   "exo_ceers_bg_cmb_fixed_full": {
@@ -135,7 +135,7 @@
     "attempts": 2,
     "auto_resubmit_attempts": 0,
     "job_id": "29036",
-    "last_known_status": "ZOMBIE",
+    "last_known_status": "RUNNING",
     "submitted_at": "2026-06-04T18:39:09.366527"
   },
   "exo_uvlf_bg_cmb_vbeta_restr": {
@@ -149,13 +149,17 @@
     "submitted_at": "2026-06-01T01:49:30.160918"
   },
   "exo_uvlf_bg_cmb_vshmr_restr": {
-    "last_known_status": "PENDING"
+    "attempts": 3,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29043",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-06-05T05:01:02.428756"
   },
   "exo_uvlf_bg_fixed_full": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29027",
-    "last_known_status": "QUEUED",
+    "last_known_status": "RUNNING",
     "submitted_at": "2026-06-03T04:47:17.937622"
   },
   "exo_uvlf_bg_fixed_restr": {
@@ -171,7 +175,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29026",
-    "last_known_status": "QUEUED",
+    "last_known_status": "RUNNING",
     "submitted_at": "2026-06-02T17:58:47.193453"
   },
   "exo_uvlf_bg_vshmr_restr": {
@@ -218,7 +222,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29012",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-05-30T23:11:36.403713"
   },
   "lcdm_ceers_bg_cmb_fixed_full": {
@@ -356,11 +360,15 @@
   "lcdm_uvlf_bg_cmb_vshmr_full": {
     "attempts": 1,
     "job_id": "29011",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-05-30T18:41:57.851892"
   },
   "lcdm_uvlf_bg_cmb_vshmr_restr": {
-    "last_known_status": "PENDING"
+    "attempts": 3,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29044",
+    "last_known_status": "FAILED",
+    "submitted_at": "2026-06-05T05:01:19.370068"
   },
   "lcdm_uvlf_bg_fixed_full": {
     "last_known_status": "PENDING"

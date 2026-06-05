@@ -139,7 +139,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/builders/builder_exo_fixed/outputs/builder_exo_fixed.covmat
+    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/exotic/full/fixed/exo_primer_bg_cmb_fixed_full/exo_primer_bg_cmb_fixed_full.covmat
     drag: false
     oversample_power: 0
     proposal_scale: 1.9
