@@ -33,6 +33,7 @@ import shutil
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple, Any
 import random
+import signal
 import numpy as np
 import glob
 from collections import deque
@@ -49,6 +50,10 @@ POLL_SECONDS_AUTO    = 15 * 60   # default auto-mode poll cadence
 PAUSED_POLL_SECONDS  = 60        # tighter cadence while paused
 CONTROL_FILE         = os.path.join(RUNS_ROOT, ".run_manager_control.json")
 CONVERGENCE_RMINUS1  = 0.02      # must match yaml Rminus1_stop
+
+# Auto-daemon — survives terminal hangup so you can close the laptop.
+AUTO_PIDFILE = os.path.join(RUNS_ROOT, ".auto_daemon.pid")
+AUTO_LOG     = os.path.join(RUNS_ROOT, ".auto_daemon.log")
 
 # ZOMBIE detection: a job in squeue RUNNING but whose chain files haven't been
 # written to in this many hours is declared ZOMBIE. Workers update chain .txt
@@ -480,6 +485,65 @@ def bump_cpus_in_sh(cfg, new_cpus=2):
     with open(sh_path, 'w') as f:
         f.write(new_text)
     return True
+
+
+def add_exclude_in_sh(cfg, exclude_nodes):
+    # type: (Dict[str, Any], str) -> bool
+    """In-place rewrite of (or insertion of) #SBATCH --exclude= in the SLURM
+    script. exclude_nodes is a SLURM nodelist string (e.g. 'nut05' or
+    'nut05,nut06'). Returns True if the file was modified."""
+    sh_path = os.path.join(RUNS_ROOT, cfg['folder_path'],
+                           "{}.sh".format(cfg['run_name']))
+    if not os.path.exists(sh_path):
+        return False
+    with open(sh_path) as f:
+        text = f.read()
+
+    new_directive = '#SBATCH --exclude={}'.format(exclude_nodes)
+
+    if re.search(r'^#SBATCH --exclude=\S+', text, re.MULTILINE):
+        # Update existing
+        new_text = re.sub(
+            r'^#SBATCH --exclude=\S+',
+            new_directive,
+            text,
+            count=1,
+            flags=re.MULTILINE,
+        )
+    else:
+        # Insert after the --cpus-per-task line (every .sh has one)
+        new_text = re.sub(
+            r'(^#SBATCH --cpus-per-task=\S+)$',
+            r'\1\n' + new_directive,
+            text,
+            count=1,
+            flags=re.MULTILINE,
+        )
+
+    if new_text == text:
+        return False
+    with open(sh_path, 'w') as f:
+        f.write(new_text)
+    return True
+
+
+def clear_exclude_in_sh(cfg):
+    # type: (Dict[str, Any]) -> bool
+    """Strip any #SBATCH --exclude= line from the SLURM script. Returns True
+    if the file was modified. Used by `auto-clear-exclude`."""
+    sh_path = os.path.join(RUNS_ROOT, cfg['folder_path'],
+                           "{}.sh".format(cfg['run_name']))
+    if not os.path.exists(sh_path):
+        return False
+    with open(sh_path) as f:
+        text = f.read()
+    new_text = re.sub(r'^#SBATCH --exclude=\S+\n', '', text, flags=re.MULTILINE)
+    if new_text == text:
+        return False
+    with open(sh_path, 'w') as f:
+        f.write(new_text)
+    return True
+
 
 def _prompt_cmb_cpu_bump(cfgs):
     # type: (List[Dict[str, Any]]) -> None
@@ -1290,8 +1354,8 @@ def cmd_resubmit_all_paused(all_runs, state):
 #  COMMAND: auto N (daemon)
 # ============================================================================
 
-def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO):
-    # type: (int, Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]], int) -> None
+def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO, skip_prompts=False):
+    # type: (int, Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]], int, bool) -> None
     print(_c("\n  AUTO MODE: maintaining {} concurrent active jobs.".format(N), 'bold'))
     print("  Poll interval: {} s ({} min).  Ctrl+C to stop.".format(
         poll_seconds, poll_seconds // 60))
@@ -1305,20 +1369,21 @@ def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO):
     # Seed the control file with the starting state
     save_control(N=N, paused=False)
 
-    cmb_remaining = any(
-        all_runs[rn]['has_cmb'] and state.get(rn, {}).get('job_id') is None
-        for rn in all_runs
-    )
-    if cmb_remaining:
-        ans = input(_c("  Bump --cpus-per-task to 2 for ALL remaining CMB runs (one-time)? [y/N]: ", 'cyan'))
-        if ans.strip().lower() in ('y', 'yes'):
-            n_bumped = 0
-            for rn, cfg in all_runs.items():
-                if cfg['has_cmb'] and state.get(rn, {}).get('job_id') is None:
-                    if bump_cpus_in_sh(cfg, new_cpus=2):
-                        n_bumped += 1
-            print(_c("  Bumped cpus on {} CMB scripts.".format(n_bumped), 'green'))
-            print()
+    if not skip_prompts:
+        cmb_remaining = any(
+            all_runs[rn]['has_cmb'] and state.get(rn, {}).get('job_id') is None
+            for rn in all_runs
+        )
+        if cmb_remaining:
+            ans = input(_c("  Bump --cpus-per-task to 2 for ALL remaining CMB runs (one-time)? [y/N]: ", 'cyan'))
+            if ans.strip().lower() in ('y', 'yes'):
+                n_bumped = 0
+                for rn, cfg in all_runs.items():
+                    if cfg['has_cmb'] and state.get(rn, {}).get('job_id') is None:
+                        if bump_cpus_in_sh(cfg, new_cpus=2):
+                            n_bumped += 1
+                print(_c("  Bumped cpus on {} CMB scripts.".format(n_bumped), 'green'))
+                print()
 
     iteration = 0
     try:
@@ -1380,6 +1445,238 @@ def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO):
     except KeyboardInterrupt:
         print(_c("\n  Auto mode stopped by user.", 'yellow'))
 
+
+        
+# ============================================================================
+#  AUTO DAEMON — survives terminal hangup (close-laptop-safe)
+# ============================================================================
+
+def _is_pid_alive(pid):
+    # type: (int) -> bool
+    try:
+        os.kill(pid, 0)
+    except (OSError, ProcessLookupError):
+        return False
+    return True
+
+
+def _running_auto_daemon_pid():
+    # type: () -> Optional[int]
+    """Return PID if daemon is running, else None. Cleans up stale PID files."""
+    if not os.path.exists(AUTO_PIDFILE):
+        return None
+    try:
+        with open(AUTO_PIDFILE) as f:
+            pid = int(f.read().strip())
+    except (IOError, ValueError):
+        try:
+            os.remove(AUTO_PIDFILE)
+        except OSError:
+            pass
+        return None
+    if not _is_pid_alive(pid):
+        try:
+            os.remove(AUTO_PIDFILE)
+        except OSError:
+            pass
+        return None
+    return pid
+
+
+def _write_auto_pidfile(pid):
+    # type: (int) -> None
+    with open(AUTO_PIDFILE, 'w') as f:
+        f.write(str(pid))
+
+
+def _remove_auto_pidfile():
+    if os.path.exists(AUTO_PIDFILE):
+        try:
+            os.remove(AUTO_PIDFILE)
+        except OSError:
+            pass
+
+
+def cmd_auto_daemon(N, all_runs, state, poll_seconds):
+    # type: (int, Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]], int) -> None
+    """Internal — actual auto loop, invoked as a detached subprocess by
+    cmd_auto_spawn. All output goes to AUTO_LOG (redirected by parent).
+    Survives SIGHUP (terminal close); SIGTERM/SIGINT trigger clean exit."""
+
+    def _shutdown(signum, _frame):
+        log_event("[auto-daemon] received signal {}, shutting down cleanly".format(signum))
+        _remove_auto_pidfile()
+        sys.exit(0)
+
+    signal.signal(signal.SIGTERM, _shutdown)
+    signal.signal(signal.SIGINT,  _shutdown)
+    signal.signal(signal.SIGHUP,  signal.SIG_IGN)   # survive terminal hangup
+
+    log_event("[auto-daemon] started, N={}, poll={}s".format(N, poll_seconds))
+    print("[{}] auto-daemon started, N={}, poll={}s".format(
+        datetime.now().isoformat(), N, poll_seconds))
+    sys.stdout.flush()
+
+    try:
+        # skip_prompts=True: spawn already handled the interactive prompts
+        cmd_auto(N, all_runs, state, poll_seconds=poll_seconds, skip_prompts=True)
+    finally:
+        _remove_auto_pidfile()
+
+
+def cmd_auto_spawn(N, all_runs, state, poll_seconds):
+    # type: (int, Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]], int) -> None
+    """Interactive: prompt for CMB CPU bump and node exclusions, then fork a
+    detached cmd_auto_daemon. Attaches tail to AUTO_LOG; Ctrl+C exits the tail
+    view without killing the daemon."""
+
+    existing = _running_auto_daemon_pid()
+    if existing is not None:
+        print(_c("  Auto daemon already running (PID {})".format(existing), 'green'))
+        print(_c("  Attaching to log...", 'gray'))
+        print()
+        cmd_auto_log()
+        return
+
+    # 1) CMB CPU bump prompt (lifted out of cmd_auto so it runs interactively
+    #    before the daemon detaches)
+    cmb_remaining = any(
+        all_runs[rn]['has_cmb'] and state.get(rn, {}).get('job_id') is None
+        for rn in all_runs
+    )
+    if cmb_remaining:
+        ans = input(_c("  Bump --cpus-per-task to 2 for ALL remaining CMB runs? [y/N]: ", 'cyan'))
+        if ans.strip().lower() in ('y', 'yes'):
+            n_bumped = 0
+            for rn, cfg in all_runs.items():
+                if cfg['has_cmb'] and state.get(rn, {}).get('job_id') is None:
+                    if bump_cpus_in_sh(cfg, new_cpus=2):
+                        n_bumped += 1
+            print(_c("    Bumped cpus on {} CMB scripts.".format(n_bumped), 'green'))
+
+    # 2) Node-exclusion prompt
+    print()
+    ans = input(_c(
+        "  Exclude any compute nodes from auto-submits? (e.g. 'nut05' or "
+        "'nut05,nut06'; blank to skip): ", 'cyan'))
+    excl = ans.strip()
+    if excl:
+        n_excl = 0
+        for rn, cfg in all_runs.items():
+            # Only modify scripts for runs not yet submitted in this campaign
+            if state.get(rn, {}).get('job_id') is None:
+                if add_exclude_in_sh(cfg, excl):
+                    n_excl += 1
+        print(_c("    Set --exclude={} on {} pending .sh scripts.".format(
+            excl, n_excl), 'green'))
+    print()
+
+    # 3) Spawn detached daemon
+    print(_c("  Starting detached auto daemon...", 'bold'))
+    try:
+        log_fd = open(AUTO_LOG, 'a')
+        log_fd.write('\n--- daemon spawn at {} ---\n'.format(datetime.now().isoformat()))
+        log_fd.flush()
+        proc = subprocess.Popen(
+            [sys.executable, os.path.abspath(__file__),
+             '--auto-daemon', str(N), '--poll-seconds', str(poll_seconds)],
+            stdout=log_fd,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,   # detach from controlling terminal
+            close_fds=True,
+        )
+    except Exception as e:
+        print(_c("  Failed to spawn daemon: {}".format(e), 'red'))
+        return
+
+    _write_auto_pidfile(proc.pid)
+    time.sleep(1.5)  # give the daemon a moment to actually start
+
+    if not _is_pid_alive(proc.pid):
+        _remove_auto_pidfile()
+        print(_c("  Daemon died immediately. Check log: {}".format(AUTO_LOG), 'red'))
+        return
+
+    print(_c("  ✓ Auto daemon started (PID {})".format(proc.pid), 'green'))
+    print(_c("    PID file:  {}".format(AUTO_PIDFILE), 'gray'))
+    print(_c("    Log file:  {}".format(AUTO_LOG), 'gray'))
+    print(_c("    Stop with: python run_manager.py auto-stop", 'gray'))
+    print()
+    cmd_auto_log()
+
+
+def cmd_auto_log():
+    """Tail AUTO_LOG. Ctrl-C exits the tail view but leaves the daemon running."""
+    if not os.path.exists(AUTO_LOG):
+        print(_c("  No auto log yet at {}".format(AUTO_LOG), 'yellow'))
+        print(_c("  (Daemon may have just started — try again in 10s.)", 'gray'))
+        return
+    print(_c("  Attaching to auto-daemon log. Ctrl-C exits THIS VIEW only — "
+             "daemon keeps running.", 'gray'))
+    print(_c("  Log file: {}".format(AUTO_LOG), 'gray'))
+    print()
+    try:
+        subprocess.run(['tail', '-n', '40', '-f', AUTO_LOG])
+    except KeyboardInterrupt:
+        pass
+    print()
+    pid = _running_auto_daemon_pid()
+    if pid is not None:
+        print(_c("  Detached from log view. Auto daemon still running "
+                 "(PID {}).".format(pid), 'green'))
+        print(_c("  Stop with: python run_manager.py auto-stop", 'gray'))
+    else:
+        print(_c("  Detached. (Daemon does not appear to be running.)", 'yellow'))
+
+
+def cmd_auto_stop():
+    """SIGTERM the auto daemon. Waits up to 5s for clean exit; SIGKILLs after."""
+    pid = _running_auto_daemon_pid()
+    if pid is None:
+        print(_c("  No auto daemon running.", 'gray'))
+        return
+    print(_c("  Stopping auto daemon (PID {})...".format(pid), 'bold'))
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError as e:
+        print(_c("  SIGTERM failed: {}".format(e), 'red'))
+        return
+    # Wait up to 5s for clean exit
+    for _ in range(20):
+        if not _is_pid_alive(pid):
+            break
+        time.sleep(0.25)
+    else:
+        print(_c("  Daemon didn't exit on SIGTERM; sending SIGKILL...", 'yellow'))
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except OSError:
+            pass
+    _remove_auto_pidfile()
+    print(_c("  Auto daemon stopped.", 'green'))
+
+
+def cmd_auto_status():
+    """Quick check: is the auto daemon running?"""
+    pid = _running_auto_daemon_pid()
+    if pid is not None:
+        print(_c("  Auto daemon RUNNING (PID {})".format(pid), 'green'))
+        print(_c("    Log file: {}".format(AUTO_LOG), 'gray'))
+        print(_c("    Tail it:  python run_manager.py auto-log", 'gray'))
+        print(_c("    Stop it:  python run_manager.py auto-stop", 'gray'))
+    else:
+        print(_c("  No auto daemon running.", 'gray'))
+
+
+def cmd_auto_clear_exclude(all_runs, state):
+    """Strip --exclude=... from all pending .sh scripts."""
+    n_cleared = 0
+    for rn, cfg in all_runs.items():
+        if state.get(rn, {}).get('job_id') is None:
+            if clear_exclude_in_sh(cfg):
+                n_cleared += 1
+    print(_c("  Cleared --exclude from {} pending .sh scripts.".format(n_cleared), 'green'))
 
 # ============================================================================
 #  COMMAND: resubmit
@@ -3688,14 +3985,13 @@ def main():
         
     elif cmd == 'auto':
         if len(sys.argv) < 3:
-            print("  Usage: python run_manager.py auto <N> [--poll-seconds S]")
+            print("  Usage: python run_manager.py auto <N> [--poll-seconds S] [--foreground]")
             sys.exit(1)
         try:
             N = int(sys.argv[2])
         except ValueError:
             print(_c("  N must be an integer.", 'red'))
             sys.exit(1)
-        # Optional --poll-seconds
         poll_seconds = POLL_SECONDS_AUTO
         if '--poll-seconds' in sys.argv:
             idx = sys.argv.index('--poll-seconds')
@@ -3707,7 +4003,41 @@ def main():
             except (IndexError, ValueError):
                 print(_c("  --poll-seconds requires an integer argument.", 'red'))
                 sys.exit(1)
-        cmd_auto(N, all_runs, state, poll_seconds=poll_seconds)
+        # Default: detach as a daemon. --foreground keeps the old behavior.
+        if '--foreground' in sys.argv:
+            cmd_auto(N, all_runs, state, poll_seconds=poll_seconds)
+        else:
+            cmd_auto_spawn(N, all_runs, state, poll_seconds)
+
+    elif cmd == '--auto-daemon':
+        # INTERNAL — invoked by cmd_auto_spawn as a detached subprocess.
+        if len(sys.argv) < 3:
+            sys.exit(1)
+        try:
+            N = int(sys.argv[2])
+        except ValueError:
+            sys.exit(1)
+        poll_seconds = POLL_SECONDS_AUTO
+        if '--poll-seconds' in sys.argv:
+            idx = sys.argv.index('--poll-seconds')
+            try:
+                poll_seconds = int(sys.argv[idx + 1])
+            except (IndexError, ValueError):
+                sys.exit(1)
+        cmd_auto_daemon(N, all_runs, state, poll_seconds)
+
+    elif cmd == 'auto-stop':
+        cmd_auto_stop()
+
+    elif cmd == 'auto-status':
+        cmd_auto_status()
+
+    elif cmd == 'auto-log':
+        cmd_auto_log()
+
+    elif cmd == 'auto-clear-exclude':
+        cmd_auto_clear_exclude(all_runs, state)
+        
     elif cmd == 'throttle':
         if len(sys.argv) < 3:
             print("  Usage: python run_manager.py throttle <N>")

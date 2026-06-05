@@ -302,13 +302,11 @@ def is_donor_eligible(run_name, cfg, state, r1m_cutoff, r1cl_cutoff):
 
 def covmat_path_for_run(cfg):
     # type: (Dict[str, Any]) -> str
-    """Path of the run's learned covmat. Checks safe outer directory first,
-    then falls back to outputs/ (where cobaya natively writes them)."""
     folder = os.path.join(RUNS_ROOT, cfg['folder_path'])
-    safe_path = os.path.join(folder, cfg['run_name'] + '.covmat')
+    safe_path = os.path.join(folder, 'outputs', cfg['run_name'] + '.covmat')
     if os.path.exists(safe_path):
         return safe_path
-    return os.path.join(folder, 'outputs', cfg['run_name'] + '.covmat')
+    return os.path.join(folder, cfg['run_name'] + '.covmat')
 
 
 def discover_donor_pool(all_runs, state, r1m_cutoff, r1cl_cutoff):
