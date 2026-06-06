@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=exo_uvlf_vbeta_restr
 #SBATCH --nodes=1
-#SBATCH --exclude=nut05
+#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02
 #SBATCH --output=exo_uvlf_vbeta_restr.log
 #SBATCH --error=exo_uvlf_vbeta_restr.err
 #SBATCH --ntasks=8

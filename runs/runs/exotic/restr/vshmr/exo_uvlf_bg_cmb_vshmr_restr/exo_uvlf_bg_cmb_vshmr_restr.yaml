@@ -156,7 +156,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/exotic/restr/vshmr/exo_uvlf_bg_cmb_vshmr_restr/exo_uvlf_bg_cmb_vshmr_restr.covmat
+    covmat: auto
     drag: false
     oversample_power: 0
     proposal_scale: 1.9

@@ -14,7 +14,7 @@
 #     python run_manager.py launch <N>
 #     python run_manager.py auto <N>
 #     python run_manager.py resubmit <run_name>
-#     python run_manager.py resubmit --all-stalled
+#      python run_manager.py resubmit --all-stalled  (resets empty to PENDING, prompts to resume rest)
 #     python run_manager.py restart <run_name>
 #     python run_manager.py reset <run_name>
 #     python run_manager.py health <run_name>
@@ -100,6 +100,27 @@ ZCUT_OPTIONS = ['full', 'restr']
 MODELS       = ['exo', 'lcdm']
 NON_UVLF_DATA_COMBOS = ['bg', 'bg_cmb']
 
+try:
+    from notifier import send_admin_email as _send_admin_email_impl
+    _EMAILS_AVAILABLE = True
+except ImportError:
+    _EMAILS_AVAILABLE = False
+
+
+def _send_auto_email(subject, html):
+    # type: (str, str) -> None
+    """Fire-and-forget email send; logs success/failure, never raises."""
+    if not _EMAILS_AVAILABLE:
+        return
+    try:
+        ok, msg = _send_admin_email_impl(subject, html)
+        if ok:
+            log_event("[auto-email] sent: {}".format(subject))
+        else:
+            log_event("[auto-email] send failed ({}): {}".format(subject, msg))
+    except Exception as e:
+        log_event("[auto-email] exception sending '{}': {}".format(subject, e))
+        
 
 def build_all_runs():
     # type: () -> Dict[str, Dict[str, Any]]
@@ -1687,18 +1708,71 @@ def cmd_resubmit(arg, all_runs, state):
     statuses = get_all_statuses(all_runs, state)
 
     if arg == '--all-stalled':
-        targets = [rn for rn in all_runs if statuses[rn]['status'] == 'STALLED']
-        if not targets:
+        initial_targets = [rn for rn in all_runs if statuses[rn]['status'] == 'STALLED']
+        if not initial_targets:
             print("  No STALLED runs to resubmit.")
             return
-        print(_c("\n  Resubmitting {} STALLED runs:".format(len(targets)), 'bold'))
+
+        with_chains = []
+        no_chains = []
+
+        for rn in initial_targets:
+            cfg = all_runs[rn]
+            folder = os.path.join(RUNS_ROOT, cfg['folder_path'])
+            if _count_chain_files(folder, rn) > 0:
+                with_chains.append(rn)
+            else:
+                no_chains.append(rn)
+
+        print(_c("\n  Found {} STALLED runs:".format(len(initial_targets)), 'bold'))
         
-        for rn in targets:
-            print("    {}".format(rn))
-        ans = input(_c("  Confirm? [y/N]: ", 'cyan'))
-        if ans.strip().lower() not in ('y', 'yes'):
-            print("  Aborted.")
+        # 1. Handle no-chain runs automatically
+        if no_chains:
+            print(_c("  {} runs have NO chain files. Moving to PENDING...".format(len(no_chains)), 'yellow'))
+            for rn in no_chains:
+                print("    - {}".format(rn))
+                state.pop(rn, None)
+                # Wipe dead logs so they don't trigger FAILED/STALLED patterns on the next scan
+                cfg = all_runs[rn]
+                folder = os.path.join(RUNS_ROOT, cfg['folder_path'])
+                for ext in ('.log', '.err'):
+                    try:
+                        os.remove(os.path.join(folder, rn + ext))
+                    except OSError:
+                        pass
+            save_state(state)
+            print(_c("    ✓ Reset {} chain-less runs to PENDING.\n".format(len(no_chains)), 'green'))
+
+        # 2. Interactive prompt for with-chain runs
+        targets = []
+        if with_chains:
+            print(_c("  {} runs HAVE chain files:".format(len(with_chains)), 'cyan'))
+            for rn in with_chains:
+                print("    - {}".format(rn))
+            
+            print()
+            ans = input(_c("  Do you want to resubmit these runs? [y/N]: ", 'cyan'))
+            if ans.strip().lower() in ('y', 'yes'):
+                ans2 = input(_c("  Submit all? Or a certain number? (Enter 'all' or a number) [all]: ", 'cyan')).strip().lower()
+                
+                if not ans2 or ans2 == 'all':
+                    targets = with_chains
+                else:
+                    try:
+                        num = int(ans2)
+                        targets = with_chains[:num]
+                        print("  Limiting submission to {} runs.".format(len(targets)))
+                    except ValueError:
+                        print("  Invalid input. Aborting resubmission.")
+                        return
+            else:
+                print("  Skipping resubmission.")
+                return
+
+        if not targets:
+            print("  No runs left to resubmit.")
             return
+            
     else:
         if arg not in all_runs:
             print(_c("  Unknown run: {}".format(arg), 'red'))
@@ -1716,8 +1790,9 @@ def cmd_resubmit(arg, all_runs, state):
                 'job_id': job_id,
                 'submitted_at': datetime.now().isoformat(),
                 'attempts': entry.get('attempts', 0) + 1,
-                'auto_resubmit_attempts': 0,   # ← ADD THIS LINE
+                'auto_resubmit_attempts': 0,
             })
+            entry.pop('paused', None)
             state[rn] = entry
             save_state(state)
             log_event("Resubmitted {} as job {}".format(rn, job_id))
@@ -3923,8 +3998,7 @@ Usage:
   python run_manager.py submit <run_name>        # sbatch a single run (preserves chains)
   
   python run_manager.py resubmit <run_name>      # alias of submit, intended for STALLED runs
-  python run_manager.py resubmit --all-stalled   # batch-resume all STALLED runs
-  
+  python run_manager.py resubmit --all-stalled   # Reset empty STALLED to PENDING; prompt to resume the rest  
   python run_manager.py resubmit --all-paused    # bring all PAUSED runs back (cobaya --resume)
   python run_manager.py restart <run_name>       # WIPE chains + fresh submit
   python run_manager.py reset <run_name>         # dump covmat from chains + wipe outputs + fresh start

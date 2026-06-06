@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=exo_ceers_fixed_full
 #SBATCH --nodes=1
-#SBATCH --exclude=nut05
+#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02
 #SBATCH --output=exo_ceers_fixed_full.log
 #SBATCH --error=exo_ceers_fixed_full.err
 #SBATCH --ntasks=8

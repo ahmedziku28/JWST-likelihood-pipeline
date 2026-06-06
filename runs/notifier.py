@@ -850,6 +850,17 @@ def send_email(subject, html, config):
         return False, 'SMTP error: {}'.format(e)
     except Exception as e:
         return False, '{}: {}'.format(type(e).__name__, e)
+def send_admin_email(subject, html):
+    # type: (str, str) -> Tuple[bool, str]
+    """Synchronous one-shot email send for external callers (e.g. run_manager
+    auto-daemon notifications). Loads the email config, sends, returns
+    (success, message). Safe to call from any process — does not require the
+    notifier daemon to be running."""
+    config = load_email_config()
+    if config is None:
+        return False, 'no email config; run: python notifier.py --setup'
+    return send_email(subject, html, config)
+
 
 # ───────────────────────────────────────────────────────────────────────────
 # Commands
