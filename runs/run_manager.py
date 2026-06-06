@@ -1559,7 +1559,8 @@ def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO, skip_prompts=Fa
             converged = sum(1 for s in statuses.values()
                             if s['status'] == 'CONVERGED')
             pending = [rn for rn in PRIORITY_ORDER
-                       if rn in all_runs and statuses[rn]['status'] == 'PENDING']
+                       if rn in all_runs
+                       and statuses[rn]['status'] in ('PENDING', 'PAUSED')]
 
             ts = datetime.now().strftime('%H:%M:%S')
             tag = _c(" [PAUSED]", 'yellow') if paused else ""
@@ -1581,6 +1582,12 @@ def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO, skip_prompts=Fa
                 if slots > 0 and pending:
                     to_launch = pending[:slots]
                     for rn in to_launch:
+                        # If resuming a PAUSED run, clear the explicit-pause flag
+                        # in state so get_all_statuses doesn't keep classifying it
+                        # as PAUSED after the new sbatch.
+                        if state.get(rn, {}).get('paused'):
+                            state[rn]['paused'] = False
+                            save_state(state)
                         job_id = submit_run(all_runs[rn])
                         if job_id:
                             entry = state.get(rn, {})
