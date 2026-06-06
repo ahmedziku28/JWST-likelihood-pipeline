@@ -131,7 +131,7 @@
   "exo_uvlf_bg_cmb_fixed_restr": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
-    "last_known_status": "RUNNING",
+    "last_known_status": "PAUSED",
     "paused": true,
     "submitted_at": "2026-06-06T00:22:05.280924"
   },
@@ -174,7 +174,10 @@
     "last_known_status": "PENDING"
   },
   "exo_uvlf_bg_vbeta_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "job_id": "29085",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-06-06T14:25:15.225188"
   },
   "exo_uvlf_bg_vbeta_restr": {
     "last_known_status": "PENDING"
@@ -355,7 +358,7 @@
   "lcdm_uvlf_bg_cmb_fixed_restr": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
-    "last_known_status": "RUNNING",
+    "last_known_status": "PAUSED",
     "paused": true,
     "submitted_at": "2026-06-06T00:21:57.919701"
   },
@@ -389,26 +392,35 @@
   "lcdm_uvlf_bg_fixed_full": {
     "attempts": 1,
     "job_id": "29045",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-06-05T13:15:05.483063"
   },
   "lcdm_uvlf_bg_fixed_restr": {
     "last_known_status": "PENDING"
   },
   "lcdm_uvlf_bg_vbeta_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "last_known_status": "PAUSED",
+    "paused": true,
+    "submitted_at": "2026-06-06T14:44:50.621844"
   },
   "lcdm_uvlf_bg_vbeta_restr": {
     "last_known_status": "PENDING"
   },
   "lcdm_uvlf_bg_vshmr_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "last_known_status": "PAUSED",
+    "paused": true,
+    "submitted_at": "2026-06-06T14:44:50.646026"
   },
   "lcdm_uvlf_bg_vshmr_restr": {
     "last_known_status": "PENDING"
   },
   "lcdm_uvlf_fixed_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "job_id": "29088",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-06-06T15:17:35.912478"
   },
   "lcdm_uvlf_fixed_restr": {
     "last_known_status": "PENDING"

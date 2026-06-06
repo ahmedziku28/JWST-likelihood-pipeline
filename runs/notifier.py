@@ -850,6 +850,123 @@ def send_email(subject, html, config):
         return False, 'SMTP error: {}'.format(e)
     except Exception as e:
         return False, '{}: {}'.format(type(e).__name__, e)
+
+    
+# ============================================================================
+#  EMAIL RENDERERS — all auto-mode HTML lives here. run_manager.py is
+#  expected to call render_*() to get (subject, html), then ship via
+#  send_admin_email().
+# ============================================================================
+
+_BASE_HTML_WRAPPER = (
+    '<html><body style="font-family:JetBrains Mono,Menlo,monospace;'
+    'background:#f5f5f1;padding:24px;color:#1a1a1a;">'
+    '<div style="background:#fff;border:1px solid #e6e6e0;border-radius:6px;'
+    'padding:24px;max-width:640px;margin:auto;">{body}</div>'
+    '</body></html>'
+)
+
+
+def _kv_table(rows):
+    # type: (List[Tuple[str, str]]) -> str
+    """Render a simple two-column key/value table from (label, value) pairs."""
+    cells = ''.join(
+        '<tr><td style="padding:4px 14px 4px 0;color:#666;">{k}</td>'
+        '<td style="padding:4px 0;"><b>{v}</b></td></tr>'.format(
+            k=k, v=v)
+        for k, v in rows
+    )
+    return '<table style="border-collapse:collapse;">' + cells + '</table>'
+
+
+def render_auto_launch_email(N, poll_seconds, host, ts,
+                             exclude_str, converged, total, pending):
+    # type: (int, int, str, str, str, int, int, int) -> Tuple[str, str]
+    body = (
+        '<h2 style="margin:0 0 12px 0;">auto-daemon launched</h2>'
+        '<p style="margin:0 0 16px 0;color:#444;">Started on <b>{host}</b> at '
+        '<b>{ts}</b></p>{tbl}'
+    ).format(
+        host=host, ts=ts,
+        tbl=_kv_table([
+            ('Concurrent slots (N):', str(N)),
+            ('Poll interval:',        '{}s'.format(poll_seconds)),
+            ('Exclude nodes:',        exclude_str or '(none)'),
+            ('Converged / total:',    '{}/{}'.format(converged, total)),
+            ('Still PENDING:',        str(pending)),
+        ])
+    )
+    subject = '[exo_DE] auto-daemon launched (N={})'.format(N)
+    return subject, _BASE_HTML_WRAPPER.format(body=body)
+
+
+def render_auto_submit_email(run_name, job_id, model, shmr, zcut, data,
+                             used, N, ts, exclude_str):
+    # type: (str, str, str, Optional[str], Optional[str], str, int, int, str, str) -> Tuple[str, str]
+    body = (
+        '<h2 style="margin:0 0 12px 0;">auto-submit: {rn}</h2>{tbl}'
+    ).format(
+        rn=run_name,
+        tbl=_kv_table([
+            ('Job ID:',                str(job_id)),
+            ('Model / SHMR / zcut:',   '{} / {} / {}'.format(
+                model, shmr or '—', zcut or '—')),
+            ('Data combo:',            data),
+            ('--exclude:',             exclude_str or '(none)'),
+            ('Slots used:',            '{}/{}'.format(used, N)),
+            ('Time:',                  ts),
+        ])
+    )
+    subject = '[exo_DE] auto-submitted {} (job {})'.format(run_name, job_id)
+    return subject, _BASE_HTML_WRAPPER.format(body=body)
+
+
+def render_milestone_email(milestone_pct, converged, total, ts, host):
+    # type: (int, int, int, str, str) -> Tuple[str, str]
+    body = (
+        '<h2 style="margin:0 0 12px 0;">Campaign milestone: {p}%</h2>'
+        '<p style="margin:0 0 16px 0;color:#444;">As of <b>{ts}</b> on '
+        '<b>{host}</b></p>{tbl}'
+    ).format(
+        p=milestone_pct, ts=ts, host=host,
+        tbl=_kv_table([
+            ('Converged:', '{}/{} ({:.1f}%)'.format(
+                converged, total, 100.0 * converged / total)),
+            ('Milestone:', '≥ {}% reached'.format(milestone_pct)),
+        ])
+    )
+    subject = '[exo_DE] campaign milestone {}% ({}/{})'.format(
+        milestone_pct, converged, total)
+    return subject, _BASE_HTML_WRAPPER.format(body=body)
+
+
+def render_state_change_email(run_name, old_status, new_status,
+                              job_id, ts, host, extra_lines=None):
+    # type: (str, str, str, Optional[str], str, str, Optional[List[str]]) -> Tuple[str, str]
+    color_map = {
+        'STALLED':   '#cc6600',
+        'FAILED':    '#b00020',
+        'CONVERGED': '#0a7d2a',
+        'ZOMBIE':    '#7a3f8a',
+    }
+    head_color = color_map.get(new_status, '#1a1a1a')
+    body = (
+        '<h2 style="margin:0 0 12px 0;color:{hc};">{old} → {new}: {rn}</h2>'
+        '<p style="margin:0 0 16px 0;color:#444;">Detected at <b>{ts}</b> on '
+        '<b>{host}</b></p>{tbl}'
+    ).format(
+        hc=head_color, old=old_status, new=new_status, rn=run_name,
+        ts=ts, host=host,
+        tbl=_kv_table([('Run:', run_name),
+                       ('Old status:', old_status),
+                       ('New status:', new_status),
+                       ('Job ID:', str(job_id) if job_id else '(none)')]
+                      + [('', extra) for extra in (extra_lines or [])])
+    )
+    subject = '[exo_DE] {} → {}: {}'.format(old_status, new_status, run_name)
+    return subject, _BASE_HTML_WRAPPER.format(body=body)
+
+
 def send_admin_email(subject, html):
     # type: (str, str) -> Tuple[bool, str]
     """Synchronous one-shot email send for external callers (e.g. run_manager

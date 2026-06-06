@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=lcdm_primer_bg_cmb_vbeta_full
 #SBATCH --nodes=1
-#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02
+#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02,nut05
 #SBATCH --output=lcdm_primer_bg_cmb_vbeta_full.log
 #SBATCH --error=lcdm_primer_bg_cmb_vbeta_full.err
 #SBATCH --ntasks=8
 #SBATCH --time=175:00:00
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=8000
 
 echo "======================================================"

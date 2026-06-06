@@ -38,6 +38,26 @@ import numpy as np
 import glob
 from collections import deque
 
+import contextlib as _contextlib
+import io as _io
+import logging as _logging_mod
+
+@_contextlib.contextmanager
+def _silence_getdist():
+    """Suppress getdist's stdout chatter and root-logger WARNINGs."""
+    buf = _io.StringIO()
+    root = _logging_mod.getLogger()
+    prev_level = root.level
+    root.setLevel(_logging_mod.ERROR)
+    prev_stdout = sys.stdout
+    sys.stdout = buf
+    try:
+        yield
+    finally:
+        sys.stdout = prev_stdout
+        root.setLevel(prev_level)
+        
+
 # ============================================================================
 #  CONSTANTS
 # ============================================================================
@@ -68,6 +88,11 @@ ZOMBIE_CHAIN_MTIME_HOURS = 2.0
 # MPI scenario where some ranks crashed silently.
 CHAIN_CHECK_AFTER_HOURS = 2.0
 EXPECTED_CHAIN_COUNT    = 8   # matches --ntasks=8 in the .sh template
+
+
+AUTO_MILESTONE_PERCENTS = [20, 40, 60, 80, 100]
+AUTO_ALERT_NEW_STATUSES = ('STALLED', 'FAILED', 'ZOMBIE')
+
 
 # ============================================================================
 #  TEST RUN SET
@@ -208,7 +233,8 @@ def _c(text, color):
     if not USE_COLOR:
         return text
     codes = {'green': '32', 'yellow': '33', 'red': '31',
-             'cyan': '36', 'gray': '90', 'bold': '1', 'magenta': '35'}
+             'cyan': '36', 'gray': '90', 'bold': '1', 'magenta': '35',
+             'blue': '34'}
     return '\033[{}m{}\033[0m'.format(codes.get(color, '0'), text)
 
 
@@ -219,6 +245,8 @@ STATUS_SYMBOL = {
     'PENDING':   ('·', 'gray'),
     'STALLED':   ('!', 'yellow'),
     'FAILED':    ('✗', 'red'),
+    'PAUSED':    ('||', 'magenta'),
+    'ZOMBIE':    ('?', 'blue'),   # bonus — was also gray, also confusing
 }
 
 INTERESTING_TRANSITIONS = {
@@ -508,62 +536,117 @@ def bump_cpus_in_sh(cfg, new_cpus=2):
     return True
 
 
-def add_exclude_in_sh(cfg, exclude_nodes):
-    # type: (Dict[str, Any], str) -> bool
-    """In-place rewrite of (or insertion of) #SBATCH --exclude= in the SLURM
-    script. exclude_nodes is a SLURM nodelist string (e.g. 'nut05' or
-    'nut05,nut06'). Returns True if the file was modified."""
+def _parse_exclude_line(text):
+    # type: (str) -> Tuple[Optional[int], List[str]]
+    """Find the #SBATCH --exclude= line. Returns (line_index_in_lines, nodes_list)
+    or (None, []) if no such directive."""
+    lines = text.splitlines()
+    for i, ln in enumerate(lines):
+        m = re.match(r'^(\s*)#SBATCH\s+--exclude=(\S+)\s*$', ln)
+        if m:
+            nodes = [n for n in m.group(2).split(',') if n]
+            return i, nodes
+    return None, []
+
+
+def add_exclude_in_sh(cfg, nodes_to_add):
+    # type: (Dict[str, Any], List[str]) -> bool
+    """Merge nodes_to_add into any existing #SBATCH --exclude= directive (or
+    create one). De-duplicates. Returns True if the file was modified."""
     sh_path = os.path.join(RUNS_ROOT, cfg['folder_path'],
                            "{}.sh".format(cfg['run_name']))
     if not os.path.exists(sh_path):
         return False
     with open(sh_path) as f:
         text = f.read()
+    lines = text.splitlines(keepends=True)
 
-    new_directive = '#SBATCH --exclude={}'.format(exclude_nodes)
+    idx, existing = _parse_exclude_line(text)
+    merged = list(existing)
+    for n in nodes_to_add:
+        n = n.strip()
+        if n and n not in merged:
+            merged.append(n)
 
-    if re.search(r'^#SBATCH --exclude=\S+', text, re.MULTILINE):
-        # Update existing
-        new_text = re.sub(
-            r'^#SBATCH --exclude=\S+',
-            new_directive,
-            text,
-            count=1,
-            flags=re.MULTILINE,
-        )
+    new_line = '#SBATCH --exclude={}\n'.format(','.join(merged))
+
+    if idx is not None:
+        # Preserve trailing newline if original line had one
+        if not lines[idx].endswith('\n'):
+            new_line = new_line.rstrip('\n')
+        if lines[idx] == new_line:
+            return False
+        lines[idx] = new_line
     else:
-        # Insert after the --cpus-per-task line (every .sh has one)
-        new_text = re.sub(
-            r'(^#SBATCH --cpus-per-task=\S+)$',
-            r'\1\n' + new_directive,
-            text,
-            count=1,
-            flags=re.MULTILINE,
-        )
+        # Insert after the --cpus-per-task line
+        insert_at = None
+        for i, ln in enumerate(lines):
+            if re.match(r'^\s*#SBATCH\s+--cpus-per-task=', ln):
+                insert_at = i + 1
+                break
+        if insert_at is None:
+            return False  # malformed .sh — bail
+        lines.insert(insert_at, new_line)
 
-    if new_text == text:
-        return False
     with open(sh_path, 'w') as f:
-        f.write(new_text)
+        f.write(''.join(lines))
+    return True
+
+
+def remove_exclude_in_sh(cfg, nodes_to_remove):
+    # type: (Dict[str, Any], List[str]) -> bool
+    """Remove specified nodes from the #SBATCH --exclude= directive. If the
+    resulting list is empty, the entire directive is stripped. Returns True
+    if the file was modified."""
+    sh_path = os.path.join(RUNS_ROOT, cfg['folder_path'],
+                           "{}.sh".format(cfg['run_name']))
+    if not os.path.exists(sh_path):
+        return False
+    with open(sh_path) as f:
+        text = f.read()
+    lines = text.splitlines(keepends=True)
+
+    idx, existing = _parse_exclude_line(text)
+    if idx is None:
+        return False  # nothing to remove
+
+    to_remove = {n.strip() for n in nodes_to_remove if n.strip()}
+    remaining = [n for n in existing if n not in to_remove]
+
+    if remaining == existing:
+        return False  # nothing changed
+
+    if not remaining:
+        # Strip the directive line entirely
+        del lines[idx]
+    else:
+        new_line = '#SBATCH --exclude={}\n'.format(','.join(remaining))
+        if not lines[idx].endswith('\n'):
+            new_line = new_line.rstrip('\n')
+        lines[idx] = new_line
+
+    with open(sh_path, 'w') as f:
+        f.write(''.join(lines))
     return True
 
 
 def clear_exclude_in_sh(cfg):
     # type: (Dict[str, Any]) -> bool
-    """Strip any #SBATCH --exclude= line from the SLURM script. Returns True
-    if the file was modified. Used by `auto-clear-exclude`."""
+    """Strip any #SBATCH --exclude= line entirely. Returns True if modified."""
     sh_path = os.path.join(RUNS_ROOT, cfg['folder_path'],
                            "{}.sh".format(cfg['run_name']))
     if not os.path.exists(sh_path):
         return False
     with open(sh_path) as f:
         text = f.read()
-    new_text = re.sub(r'^#SBATCH --exclude=\S+\n', '', text, flags=re.MULTILINE)
+    new_text = re.sub(r'^\s*#SBATCH --exclude=\S+\s*\n', '', text, flags=re.MULTILINE)
     if new_text == text:
         return False
     with open(sh_path, 'w') as f:
         f.write(new_text)
     return True
+
+
 
 
 def _prompt_cmb_cpu_bump(cfgs):
@@ -1389,6 +1472,21 @@ def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO, skip_prompts=Fa
 
     # Seed the control file with the starting state
     save_control(N=N, paused=False)
+    
+    
+    # Milestone + state-change tracking across iterations
+    prev_status_map = {rn: state.get(rn, {}).get('last_known_status') or 'PENDING'
+                       for rn in all_runs}
+    prev_milestones_reached = set()
+    total = len(all_runs)
+    # Seed prev_milestones from the current campaign state, so we don't
+    # spam the 20% milestone email when the daemon restarts at 35% done.
+    initial_pct = (100.0 * sum(1 for s in prev_status_map.values()
+                               if s == 'CONVERGED') / total)
+    for mp in AUTO_MILESTONE_PERCENTS:
+        if initial_pct >= mp:
+            prev_milestones_reached.add(mp)
+            
 
     if not skip_prompts:
         cmb_remaining = any(
@@ -1417,6 +1515,45 @@ def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO, skip_prompts=Fa
             paused    = ctrl.get('paused', False)
 
             statuses = get_all_statuses(all_runs, state)
+            # ── State transitions: emit emails for new STALLED/FAILED/ZOMBIE ──
+            try:
+                for rn in all_runs:
+                    old = prev_status_map.get(rn, 'PENDING')
+                    new = statuses[rn]['status']
+                    if new == old:
+                        continue
+                    if new in AUTO_ALERT_NEW_STATUSES:
+                        from notifier import render_state_change_email
+                        subject, html = render_state_change_email(
+                            run_name=rn, old_status=old, new_status=new,
+                            job_id=state.get(rn, {}).get('job_id'),
+                            ts=datetime.now().isoformat(timespec='seconds'),
+                            host=os.uname().nodename,
+                        )
+                        _send_auto_email(subject, html)
+                    prev_status_map[rn] = new
+            except Exception as e:
+                log_event("[auto] state-change email pass failed: {}".format(e))
+
+            # ── Milestone tracking ────────────────────────────────────────────
+            try:
+                cur_converged = sum(1 for s in statuses.values()
+                                    if s['status'] == 'CONVERGED')
+                cur_pct = 100.0 * cur_converged / total
+                for mp in AUTO_MILESTONE_PERCENTS:
+                    if cur_pct >= mp and mp not in prev_milestones_reached:
+                        prev_milestones_reached.add(mp)
+                        from notifier import render_milestone_email
+                        subject, html = render_milestone_email(
+                            milestone_pct=mp,
+                            converged=cur_converged, total=total,
+                            ts=datetime.now().isoformat(timespec='seconds'),
+                            host=os.uname().nodename,
+                        )
+                        _send_auto_email(subject, html)
+            except Exception as e:
+                log_event("[auto] milestone email pass failed: {}".format(e))
+                
             active = sum(1 for s in statuses.values()
                          if s['status'] in ('RUNNING', 'QUEUED'))
             converged = sum(1 for s in statuses.values()
@@ -1525,6 +1662,9 @@ def cmd_auto_daemon(N, all_runs, state, poll_seconds):
     Survives SIGHUP (terminal close); SIGTERM/SIGINT trigger clean exit."""
 
     def _shutdown(signum, _frame):
+        print("[{}] auto-daemon received signal {}, shutting down cleanly".format(
+            datetime.now().isoformat(timespec='seconds'), signum))
+        sys.stdout.flush()
         log_event("[auto-daemon] received signal {}, shutting down cleanly".format(signum))
         _remove_auto_pidfile()
         sys.exit(0)
@@ -1537,6 +1677,28 @@ def cmd_auto_daemon(N, all_runs, state, poll_seconds):
     print("[{}] auto-daemon started, N={}, poll={}s".format(
         datetime.now().isoformat(), N, poll_seconds))
     sys.stdout.flush()
+    
+    # Launch notification (HTML rendering lives in notifier.py)
+    try:
+        from notifier import render_auto_launch_email
+        ctrl_now = load_control() or {}
+        excl_now = ctrl_now.get('exclude') or ''  # control file exclude is informational only now
+        # Cheap synthesis of campaign state for the email
+        statuses_now = get_all_statuses(all_runs, state, log_transitions=False)
+        converged_now = sum(1 for s in statuses_now.values()
+                            if s['status'] == 'CONVERGED')
+        pending_now = sum(1 for s in statuses_now.values()
+                          if s['status'] == 'PENDING')
+        subject, html = render_auto_launch_email(
+            N=N, poll_seconds=poll_seconds,
+            host=os.uname().nodename,
+            ts=datetime.now().isoformat(timespec='seconds'),
+            exclude_str=excl_now,
+            converged=converged_now, total=len(all_runs), pending=pending_now,
+        )
+        _send_auto_email(subject, html)
+    except Exception as e:
+        log_event("[auto-daemon] launch email render/send failed: {}".format(e))
 
     try:
         # skip_prompts=True: spawn already handled the interactive prompts
@@ -1575,22 +1737,9 @@ def cmd_auto_spawn(N, all_runs, state, poll_seconds):
                         n_bumped += 1
             print(_c("    Bumped cpus on {} CMB scripts.".format(n_bumped), 'green'))
 
-    # 2) Node-exclusion prompt
-    print()
-    ans = input(_c(
-        "  Exclude any compute nodes from auto-submits? (e.g. 'nut05' or "
-        "'nut05,nut06'; blank to skip): ", 'cyan'))
-    excl = ans.strip()
-    if excl:
-        n_excl = 0
-        for rn, cfg in all_runs.items():
-            # Only modify scripts for runs not yet submitted in this campaign
-            if state.get(rn, {}).get('job_id') is None:
-                if add_exclude_in_sh(cfg, excl):
-                    n_excl += 1
-        print(_c("    Set --exclude={} on {} pending .sh scripts.".format(
-            excl, n_excl), 'green'))
-    print()
+    # Node exclusions: managed via standalone commands now —
+    #   python run_manager.py exclude nut05
+    #   python run_manager.py include nut05
 
     # 3) Spawn detached daemon
     print(_c("  Starting detached auto daemon...", 'bold'))
@@ -1658,6 +1807,18 @@ def cmd_auto_stop():
         print(_c("  No auto daemon running.", 'gray'))
         return
     print(_c("  Stopping auto daemon (PID {})...".format(pid), 'bold'))
+    
+    
+    # Log the stop request to AUTO_LOG so the cliff in the log is annotated
+    try:
+        with open(AUTO_LOG, 'a') as f:
+            f.write('\n--- user requested auto-stop at {} (PID {}) ---\n'.format(
+                datetime.now().isoformat(timespec='seconds'), pid))
+            f.flush()
+    except (IOError, OSError):
+        pass  # never let logging failure block the actual stop
+    
+    
     try:
         os.kill(pid, signal.SIGTERM)
     except OSError as e:
@@ -1690,14 +1851,35 @@ def cmd_auto_status():
         print(_c("  No auto daemon running.", 'gray'))
 
 
-def cmd_auto_clear_exclude(all_runs, state):
-    """Strip --exclude=... from all pending .sh scripts."""
-    n_cleared = 0
+def cmd_exclude(nodes_str, all_runs):
+    # type: (str, Dict[str, Dict[str, Any]]) -> None
+    """Append nodes to the #SBATCH --exclude= directive of every .sh file."""
+    nodes = [n.strip() for n in nodes_str.split(',') if n.strip()]
+    if not nodes:
+        print(_c("  Usage: python run_manager.py exclude <node1[,node2,...]>", 'red'))
+        return
+    n_mod = 0
     for rn, cfg in all_runs.items():
-        if state.get(rn, {}).get('job_id') is None:
-            if clear_exclude_in_sh(cfg):
-                n_cleared += 1
-    print(_c("  Cleared --exclude from {} pending .sh scripts.".format(n_cleared), 'green'))
+        if add_exclude_in_sh(cfg, nodes):
+            n_mod += 1
+    print(_c("  Added {} to --exclude on {} .sh scripts.".format(
+        ','.join(nodes), n_mod), 'green'))
+
+
+def cmd_include(nodes_str, all_runs):
+    # type: (str, Dict[str, Dict[str, Any]]) -> None
+    """Remove nodes from the #SBATCH --exclude= directive of every .sh file."""
+    nodes = [n.strip() for n in nodes_str.split(',') if n.strip()]
+    if not nodes:
+        print(_c("  Usage: python run_manager.py include <node1[,node2,...]>", 'red'))
+        return
+    n_mod = 0
+    for rn, cfg in all_runs.items():
+        if remove_exclude_in_sh(cfg, nodes):
+            n_mod += 1
+    print(_c("  Removed {} from --exclude on {} .sh scripts.".format(
+        ','.join(nodes), n_mod), 'green'))
+    
 
 # ============================================================================
 #  COMMAND: resubmit
@@ -1933,7 +2115,8 @@ def _dump_covmat_from_chains(run_name, all_runs):
     chain_root = os.path.join(folder, 'outputs', run_name)
 
     try:
-        samples = loadMCSamples(chain_root, settings={'ignore_rows': 0.3})
+        with _silence_getdist():
+            samples = loadMCSamples(chain_root, settings={'ignore_rows': 0.3})
     except Exception as e:
         print(_c("  [ERROR] Failed to load chains: {}".format(e), 'red'))
         return None
@@ -2211,7 +2394,8 @@ def _print_getdist_summary(run_name, all_runs):
     chain_root = os.path.join(RUNS_ROOT, cfg['folder_path'], 'outputs', run_name)
 
     try:
-        samples = loadMCSamples(chain_root, settings={'ignore_rows': 0.3})
+        with _silence_getdist():
+            samples = loadMCSamples(chain_root, settings={'ignore_rows': 0.3})
     except Exception as e:
         print(_c("    [Failed to load chains: {}]".format(e), 'red'))
         return
@@ -3278,7 +3462,8 @@ def _compute_health(folder, run_name):
 
     # getdist handles .paramnames, chain discovery, everything
     try:
-        samples_gd = loadMCSamples(chain_root, settings={'ignore_rows': 0})
+        with _silence_getdist():
+            samples_gd = loadMCSamples(chain_root, settings={'ignore_rows': 0.3})
     except Exception:
         return None
 
@@ -3530,7 +3715,70 @@ def _format_health_tag(health):
         body = '{}{}'.format(display, stale)
     return _c(body, color)
 
+def _tail_progress_rows(progress_path, n=5):
+    # type: (str, int) -> List[Dict[str, Any]]
+    """Read the last n DATA rows from a cobaya .progress file. Returns list
+    of dicts with keys: N, ts (str), accept, r1, r1_cl. Empty list if no
+    data rows or file unreadable. Skips the header (starts with '#') and
+    any non-numeric N rows."""
+    if not os.path.exists(progress_path):
+        return []
+    try:
+        with open(progress_path) as f:
+            lines = f.readlines()
+    except (IOError, OSError):
+        return []
+    rows = []
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        parts = line.split()
+        # cobaya .progress format: N timestamp accept R-1 R-1_cl
+        if len(parts) < 5:
+            continue
+        try:
+            N = int(float(parts[0]))
+            ts = parts[1]
+            accept = float(parts[2])
+            r1 = float(parts[3])
+            r1_cl_raw = parts[4]
+            r1_cl = float('nan') if r1_cl_raw.lower() == 'nan' else float(r1_cl_raw)
+        except (ValueError, IndexError):
+            continue
+        rows.append({'N': N, 'ts': ts, 'accept': accept,
+                     'r1': r1, 'r1_cl': r1_cl})
+    return rows[-n:]
 
+
+def _print_progress_table(rows):
+    # type: (List[Dict[str, Any]]) -> None
+    """Print rows from _tail_progress_rows as a fixed-width ASCII table."""
+    if not rows:
+        return
+    headers = ('N', 'timestamp', 'accept', 'R-1', 'R-1_CL')
+    body_rows = []
+    for r in rows:
+        body_rows.append((
+            '{:,}'.format(r['N']),
+            r['ts'][:19],   # drop sub-second / TZ
+            '{:.3f}'.format(r['accept']),
+            '{:.3f}'.format(r['r1']),
+            'NaN' if r['r1_cl'] != r['r1_cl'] else '{:.3f}'.format(r['r1_cl']),
+        ))
+    widths = [max(len(headers[i]), max(len(row[i]) for row in body_rows))
+              for i in range(len(headers))]
+    sep   = '  +-' + '-+-'.join('-' * w for w in widths) + '-+'
+    fmt_h = '  | ' + ' | '.join('{:<' + str(w) + '}' for w in widths) + ' |'
+    fmt_r = '  | ' + ' | '.join('{:>' + str(w) + '}' for w in widths) + ' |'
+    print(sep)
+    print(_c(fmt_h.format(*headers), 'bold'))
+    print(sep)
+    for row in body_rows:
+        print(fmt_r.format(*row))
+    print(sep)
+    
+    
 def _print_health_report(run_name, health):
     # type: (str, Dict[str, Any]) -> None
     """Pretty-print full health report for one run."""
@@ -3623,13 +3871,18 @@ def _print_health_report(run_name, health):
                 r1 is not None and r1 < ETA_TARGET_MEANS and
                 r1_cl is not None and r1_cl < ETA_TARGET_CL)
             print()
-            print(_c("  ETA (extrapolated from .progress):", 'bold'))
-            if health_says_done:
-                print(_c("  health already shows R-1 below both thresholds — "
-                        "cobaya will detect at next check.", 'green'))
-            else:
-                for line in _format_eta_lines(eta, calib if calib['n'] > 0 else None):
-                    print("  " + line)
+            progress_path = health.get('_progress_path')
+            if progress_path and os.path.exists(progress_path):
+                rows = _tail_progress_rows(progress_path, n=5)
+                if rows:
+                    print()
+                    print(_c("  Recent .progress (last {} row{}):".format(
+                        len(rows), '' if len(rows) == 1 else 's'), 'bold'))
+                    _print_progress_table(rows)
+                else:
+                    print()
+                    print(_c("  .progress is empty (header only — no checkpoints yet).",
+                             'gray'))
     print()
     
 
@@ -4108,9 +4361,19 @@ def main():
 
     elif cmd == 'auto-log':
         cmd_auto_log()
+        
+    elif cmd == 'exclude':
+        if len(sys.argv) < 3:
+            print("  Usage: python run_manager.py exclude <node1[,node2,...]>")
+            sys.exit(1)
+        cmd_exclude(sys.argv[2], all_runs)
 
-    elif cmd == 'auto-clear-exclude':
-        cmd_auto_clear_exclude(all_runs, state)
+    elif cmd == 'include':
+        if len(sys.argv) < 3:
+            print("  Usage: python run_manager.py include <node1[,node2,...]>")
+            sys.exit(1)
+        cmd_include(sys.argv[2], all_runs)
+        
         
     elif cmd == 'throttle':
         if len(sys.argv) < 3:

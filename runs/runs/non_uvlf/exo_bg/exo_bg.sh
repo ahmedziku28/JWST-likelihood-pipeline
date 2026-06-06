@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=exo_bg
 #SBATCH --nodes=1
-#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02
+#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02,nut05
 #SBATCH --output=exo_bg.log
 #SBATCH --error=exo_bg.err
 #SBATCH --ntasks=8
