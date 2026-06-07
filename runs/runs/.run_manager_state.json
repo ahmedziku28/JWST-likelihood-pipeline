@@ -431,7 +431,7 @@
   "lcdm_uvlf_vbeta_full": {
     "attempts": 1,
     "job_id": "29090",
-    "last_known_status": "QUEUED",
+    "last_known_status": "RUNNING",
     "submitted_at": "2026-06-07T04:33:03.372885"
   },
   "lcdm_uvlf_vbeta_restr": {
