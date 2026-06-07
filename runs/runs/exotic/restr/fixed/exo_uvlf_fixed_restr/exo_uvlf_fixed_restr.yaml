@@ -122,7 +122,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: auto
+    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/exotic/restr/fixed/exo_uvlf_fixed_restr/exo_uvlf_fixed_restr.covmat
     drag: false
     oversample_power: 0
     proposal_scale: 1.9
