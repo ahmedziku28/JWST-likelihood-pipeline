@@ -3578,7 +3578,26 @@ def _compute_health(folder, run_name):
         if sum_w2 > 0:
             n_eff += (sum_w ** 2) / sum_w2
     n_eff = int(n_eff)
-
+    
+    # ── Per-parameter N_eff (autocorrelation-based) ──────────────────────
+    # The honest convergence diagnostic. Kish ESS is the weight-based ESS
+    # and overestimates because it ignores autocorrelation in parameter
+    # values. A chain can hit cobaya's R-1 stop with Kish ESS = 2,000 but
+    # have per-param N_eff = 60 along a tight (S, omega_cdm) degeneracy
+    # ridge — which is exactly what made exo_uvlf_fixed_restr useless for
+    # quoting headline marginals despite "converging".
+    per_param_neff = {}  # type: Dict[str, int]
+    try:
+        with _silence_getdist():
+            for j, p in enumerate(samples_gd.paramNames.names):
+                try:
+                    ess = float(samples_gd.getEffectiveSamples(j))
+                    per_param_neff[p.name] = int(ess) if ess > 0 else 0
+                except Exception:
+                    continue
+    except Exception:
+        pass
+    
     # ── Total post-burn-in weighted sample count ────────────────────────
     n_samples = int(sum(w.sum() for w in burned_weights))
 
@@ -3591,6 +3610,7 @@ def _compute_health(folder, run_name):
         'rminus1_cl': round(rminus1_cl, 4),
         'trajectory': [[f, round(r, 4)] for f, r in trajectory],
         'per_param': per_param,
+        'per_param_neff': per_param_neff,
         'bottleneck': bottleneck,
         'n_samples': n_samples,
         'n_eff': n_eff,
@@ -3834,22 +3854,72 @@ def _print_health_report(run_name, health):
             print("   {:>4.0f}%  {:<{w}s}  {:.3f}{}".format(
                 frac * 100, bar, r1, marker, w=bar_max))
 
-    # Per-parameter R-1
+    # Per-parameter R-1 + N_eff (joint view — the truth about convergence)
     per_param = health.get('per_param', {})
+    per_param_neff = health.get('per_param_neff', {})
+
+    def _neff_tag(n):
+        """Return (colored_string, raw_int_or_None) for an N_eff value."""
+        if n is None:
+            return "             ", None
+        if n < 50:
+            return _c("N_eff={:>5d}  ✗ CRITICAL".format(n), 'red'), n
+        if n < 200:
+            return _c("N_eff={:>5d}  ⚠ LOW".format(n), 'yellow'), n
+        if n < 500:
+            return _c("N_eff={:>5d}  (borderline)".format(n), 'gray'), n
+        return       "N_eff={:>5d}".format(n), n
+
+    bad_neff_count = 0
     if per_param:
         bottleneck = health.get('bottleneck', '')
         print()
-        print(_c("  Per-parameter R-1:", 'bold'))
+        print(_c("  Per-parameter R-1 + N_eff:", 'bold'))
         sorted_params = sorted(per_param.items(), key=lambda x: -x[1])
         for name, val in sorted_params:
             marker = _c(" ◄ bottleneck", 'yellow') if name == bottleneck else ""
-            print("    {:<20s}  {:.4f}{}".format(name, val, marker))
+            tag, raw_n = _neff_tag(per_param_neff.get(name))
+            if raw_n is not None and raw_n < 200:
+                bad_neff_count += 1
+            print("    {:<20s}  R-1={:.4f}   {}{}".format(name, val, tag, marker))
 
-    # N_eff
-    neff = health.get('n_eff')
-    if neff is not None and neff > 0:
+        # Derived parameters (not in per_param dict — they don't have a sampled
+        # R-1, but they do have an N_eff and they're usually the headline cells
+        # of the paper, so call them out separately).
+        derived_neff = sorted(
+            [(n, ne) for n, ne in per_param_neff.items() if n not in per_param],
+            key=lambda x: x[1])
+        if derived_neff:
+            print()
+            print(_c("  Derived parameters (N_eff only):", 'bold'))
+            for name, neff in derived_neff:
+                tag, raw_n = _neff_tag(neff)
+                if raw_n is not None and raw_n < 200:
+                    bad_neff_count += 1
+                print("    {:<20s}              {}".format(name, tag))
+
+    # Total Kish ESS (chain-level, weight-based — kept for reference;
+    # per-param is the one to actually trust)
+    kish = health.get('n_eff')
+    if kish is not None and kish > 0:
         print()
-        print("  N_eff (Kish ESS): {:,}".format(neff))
+        print("  Total Kish ESS: {:,}  ".format(kish) +
+              _c("(chain-level; per-param above is the honest one)", 'gray'))
+
+    # Loud callout if any param has poor N_eff — applies to running AND
+    # converged runs. A cobaya-converged run with low N_eff is exactly the
+    # exo_uvlf_fixed_restr trap: looks done, but headline marginals will be
+    # noisy in the corner plots and the paper.
+    if bad_neff_count > 0:
+        print()
+        print(_c(
+            "  ⚠ {} parameter{} with N_eff < 200 — posterior marginals will be "
+            "noisy.".format(bad_neff_count, '' if bad_neff_count == 1 else 's'),
+            'yellow'))
+        print(_c(
+            "    Letting the chain run longer is the only fix; "
+            "cobaya's R-1 stop won't catch this.", 'gray'))
+        
 
     # Verdict
     print()

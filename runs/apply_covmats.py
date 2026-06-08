@@ -603,14 +603,79 @@ def matchmake(receiver_cfg, donors):
         return {'kind': 'none', 'score': 0.0, 'coverage': 0.0,
                 'candidates': [(dn, s, c) for dn, _, s, c in scored[:5]]}
 
+    # Cross-block correlation donors: for each pair of blocks the receiver has,
+    # find the best-scoring donor whose chain covers params from BOTH blocks.
+    # The splice assembly will transfer that donor's correlation structure
+    # (unitless rho values) into the splice covmat, rescaled to match our
+    # chosen per-block diagonal scales. Net effect: receiver chain starts
+    # with realistic cross-block degeneracy orientations baked in, instead of
+    # spending thousands of samples relearning them via learn_proposal.
+    cross_donors = {}  # type: Dict[Tuple[str, str], str]
+    block_names = list(blocks.keys())
+    for i in range(len(block_names)):
+        for j in range(i + 1, len(block_names)):
+            b1, b2 = block_names[i], block_names[j]
+            cross_dn = _find_cross_donor(blocks[b1], blocks[b2], scored, donors)
+            if cross_dn is not None:
+                cross_donors[(b1, b2)] = cross_dn
+
     return {
         'kind':           'splice',
         'block_donors':   block_donors,
         'block_coverage': block_coverage,
+        'cross_donors':   cross_donors,
         'score':          splice_score,
         'coverage':       splice_coverage,
         'candidates':     [(dn, s, c) for dn, _, s, c in scored[:5]],
     }
+
+
+
+
+def _extract_cross_submatrix(donor_names, donor_matrix, row_params, col_params):
+    # type: (List[str], "np.ndarray", List[str], List[str]) -> Tuple[List[str], List[str], "np.ndarray"]
+    """Extract a possibly-non-square submatrix where rows are row_params and
+    columns are col_params, from a donor's covmat. Missing params on either
+    axis are silently dropped (matched lists carry the resolved labels)."""
+    pos = {p: i for i, p in enumerate(donor_names)}
+    row_matched, row_idx = [], []
+    for p in row_params:
+        if p in pos:
+            row_matched.append(p)
+            row_idx.append(pos[p])
+    col_matched, col_idx = [], []
+    for p in col_params:
+        if p in pos:
+            col_matched.append(p)
+            col_idx.append(pos[p])
+    if not row_idx or not col_idx:
+        return [], [], np.zeros((0, 0))
+    sub = donor_matrix[np.ix_(row_idx, col_idx)]
+    return row_matched, col_matched, sub
+
+
+def _find_cross_donor(block_a_params, block_b_params, scored, donors):
+    # type: (List[str], List[str], List[Any], Dict[str, Any]) -> Optional[str]
+    """Best-scoring donor whose chain covers params from BOTH block_a and
+    block_b — i.e., one whose joint posterior carries genuine cross-block
+    correlations. Returns donor name or None.
+
+    Selection criterion: maximum combined coverage of params from both blocks
+    (so donors with 5/5 in B1 + 3/3 in B2 beat donors with 5/5 + 1/3),
+    breaking ties by match-score."""
+    a_set, b_set = set(block_a_params), set(block_b_params)
+    best_dn, best_score, best_coverage = None, -1.0, -1
+    for dn, _di, s, _cov in scored:
+        dset = set(donors[dn]['params'])
+        cov_a = len(a_set & dset)
+        cov_b = len(b_set & dset)
+        if cov_a == 0 or cov_b == 0:
+            continue  # cross-correlations need overlap on BOTH sides
+        total = cov_a + cov_b
+        if total > best_coverage or (total == best_coverage and s > best_score):
+            best_dn, best_score, best_coverage = dn, s, total
+    return best_dn
+
 
 
 # ============================================================================
@@ -974,13 +1039,15 @@ def execute_plan(receiver_cfg, plan, donors, verbose=False):
 
     if plan['kind'] == 'splice':
         block_donors = plan['block_donors']
+        cross_donors = plan.get('cross_donors', {})  # backward-compat for old plans
         blocks       = parameter_blocks(receiver_cfg)
-        # Build N x N (N = receiver param count) block-diagonal matrix.
-        # Cross-block correlations stay zero (no shared chain to estimate them).
         N = len(r_params)
         idx_of = {p: i for i, p in enumerate(r_params)}
         full = np.zeros((N, N))
         placed = []  # type: List[int]
+        placed_by_block = {}  # type: Dict[str, List[str]]
+
+        # ── Phase 1: per-block diagonals (current behaviour) ──────────────────
         for block_name, block_params in blocks.items():
             dn = block_donors.get(block_name)
             if dn is None:
@@ -997,24 +1064,84 @@ def execute_plan(receiver_cfg, plan, donors, verbose=False):
                 for j, p_j in enumerate(matched):
                     full[idx_of[p_i], idx_of[p_j]] = sub[i, j]
                 placed.append(idx_of[p_i])
+            placed_by_block[block_name] = matched
             log.append("splice[{}]: from {} (+{} params{})".format(
                 block_name, dn, len(matched),
                 "" if not missing else ", missing " + ",".join(missing)))
-        # Slice to placed-only rows/cols (no diagonal-padding for unplaced;
-        # cobaya uses proposal_scale for those).
+
+        # ── Phase 2: cross-block correlations from cross-donors ───────────────
+        # For each pair (B1, B2) of blocks that both placed >=1 param, pull the
+        # cross-donor's correlation matrix block (unitless rho), then rescale
+        # by OUR placed diagonals (sigmas from the per-block donors). This is
+        # the rho-transfer construction: shape from cross-donor, magnitude
+        # from local per-block donors.
+        full_with_cross = full.copy()
+        cross_log = []
+        for (b1, b2), cross_dn in cross_donors.items():
+            placed_b1 = placed_by_block.get(b1, [])
+            placed_b2 = placed_by_block.get(b2, [])
+            if not placed_b1 or not placed_b2:
+                continue  # one of the blocks didn't place anything
+            dnames, dmat = read_covmat(donors[cross_dn]['covmat_path'])
+            row_matched, col_matched, cross_sub = _extract_cross_submatrix(
+                dnames, dmat, placed_b1, placed_b2)
+            if not row_matched or not col_matched:
+                continue
+            # Donor-side standard deviations (for normalization to rho)
+            pos = {p: i for i, p in enumerate(dnames)}
+            sigma_row_donor = np.array(
+                [np.sqrt(dmat[pos[p], pos[p]]) for p in row_matched])
+            sigma_col_donor = np.array(
+                [np.sqrt(dmat[pos[p], pos[p]]) for p in col_matched])
+            if np.any(sigma_row_donor <= 0) or np.any(sigma_col_donor <= 0):
+                continue
+            rho = cross_sub / np.outer(sigma_row_donor, sigma_col_donor)
+            # Our placed diagonals (sigmas from the chosen per-block donors)
+            sigma_row_ours = np.array(
+                [np.sqrt(full[idx_of[p], idx_of[p]]) for p in row_matched])
+            sigma_col_ours = np.array(
+                [np.sqrt(full[idx_of[p], idx_of[p]]) for p in col_matched])
+            new_cross = np.outer(sigma_row_ours, sigma_col_ours) * rho
+            # Place symmetrically
+            for ri, p_r in enumerate(row_matched):
+                for ci, p_c in enumerate(col_matched):
+                    full_with_cross[idx_of[p_r], idx_of[p_c]] = new_cross[ri, ci]
+                    full_with_cross[idx_of[p_c], idx_of[p_r]] = new_cross[ri, ci]
+            cross_log.append("splice-cross[{},{}]: from {} ({}x{} rho-block)".format(
+                b1, b2, cross_dn, len(row_matched), len(col_matched)))
+
+        # ── Phase 3: PSD check, fall back to block-diagonal if cross broke it ─
+        # Cross-correlations from one donor combined with diagonals from
+        # different donors are not guaranteed to produce a PSD matrix —
+        # different posteriors have geometrically incompatible shapes. If the
+        # cross-augmented matrix isn't PSD, fall back to the block-diagonal.
         placed = sorted(set(placed))
         if not placed:
             log.append("splice: no blocks placed; falling to auto")
             return 'auto', log
         out_params = [r_params[i] for i in placed]
-        out_mat = full[np.ix_(placed, placed)]
-        if not is_pos_def(out_mat):
-            log.append("splice: assembled covmat not PSD; falling to auto")
+        out_mat_cross = full_with_cross[np.ix_(placed, placed)]
+        out_mat_diag  = full[np.ix_(placed, placed)]
+
+        if is_pos_def(out_mat_cross):
+            out_mat = out_mat_cross
+            log.extend(cross_log)
+            log.append("splice: cross-block correlations applied for {} pair(s)".format(
+                len(cross_log)))
+        elif is_pos_def(out_mat_diag):
+            out_mat = out_mat_diag
+            log.append("splice: cross-block correlations broke PSD; "
+                       "fell back to block-diagonal")
+        else:
+            log.append("splice: assembled covmat not PSD even block-diagonal; "
+                       "falling to auto")
             return 'auto', log
+
         write_covmat(out_path, out_params, out_mat)
         log.append("splice: assembled {}/{} param rows -> {}".format(
             len(placed), N, out_path))
         return out_path, log
+    
 
     log.append("unknown plan kind: {}".format(plan['kind']))
     return 'auto', log
