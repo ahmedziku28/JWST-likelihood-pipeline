@@ -5,6 +5,9 @@ exo_uvlf_fixed_full,exo,uvlf,fixed,full,True,False,False,True,True,5,exotic/full
 exo_ceers_bg_fixed_full,exo,ceers_bg,fixed,full,True,True,False,False,True,5,exotic/full/fixed/exo_ceers_bg_fixed_full
 exo_primer_bg_fixed_full,exo,primer_bg,fixed,full,True,True,False,True,False,5,exotic/full/fixed/exo_primer_bg_fixed_full
 exo_uvlf_bg_fixed_full,exo,uvlf_bg,fixed,full,True,True,False,True,True,5,exotic/full/fixed/exo_uvlf_bg_fixed_full
+exo_ceers_cmb_fixed_full,exo,ceers_cmb,fixed,full,True,False,True,False,True,8,exotic/full/fixed/exo_ceers_cmb_fixed_full
+exo_primer_cmb_fixed_full,exo,primer_cmb,fixed,full,True,False,True,True,False,8,exotic/full/fixed/exo_primer_cmb_fixed_full
+exo_uvlf_cmb_fixed_full,exo,uvlf_cmb,fixed,full,True,False,True,True,True,8,exotic/full/fixed/exo_uvlf_cmb_fixed_full
 exo_ceers_bg_cmb_fixed_full,exo,ceers_bg_cmb,fixed,full,True,True,True,False,True,8,exotic/full/fixed/exo_ceers_bg_cmb_fixed_full
 exo_primer_bg_cmb_fixed_full,exo,primer_bg_cmb,fixed,full,True,True,True,True,False,8,exotic/full/fixed/exo_primer_bg_cmb_fixed_full
 exo_uvlf_bg_cmb_fixed_full,exo,uvlf_bg_cmb,fixed,full,True,True,True,True,True,8,exotic/full/fixed/exo_uvlf_bg_cmb_fixed_full
@@ -14,6 +17,9 @@ exo_uvlf_vbeta_full,exo,uvlf,vbeta,full,True,False,False,True,True,6,exotic/full
 exo_ceers_bg_vbeta_full,exo,ceers_bg,vbeta,full,True,True,False,False,True,6,exotic/full/vbeta/exo_ceers_bg_vbeta_full
 exo_primer_bg_vbeta_full,exo,primer_bg,vbeta,full,True,True,False,True,False,6,exotic/full/vbeta/exo_primer_bg_vbeta_full
 exo_uvlf_bg_vbeta_full,exo,uvlf_bg,vbeta,full,True,True,False,True,True,6,exotic/full/vbeta/exo_uvlf_bg_vbeta_full
+exo_ceers_cmb_vbeta_full,exo,ceers_cmb,vbeta,full,True,False,True,False,True,9,exotic/full/vbeta/exo_ceers_cmb_vbeta_full
+exo_primer_cmb_vbeta_full,exo,primer_cmb,vbeta,full,True,False,True,True,False,9,exotic/full/vbeta/exo_primer_cmb_vbeta_full
+exo_uvlf_cmb_vbeta_full,exo,uvlf_cmb,vbeta,full,True,False,True,True,True,9,exotic/full/vbeta/exo_uvlf_cmb_vbeta_full
 exo_ceers_bg_cmb_vbeta_full,exo,ceers_bg_cmb,vbeta,full,True,True,True,False,True,9,exotic/full/vbeta/exo_ceers_bg_cmb_vbeta_full
 exo_primer_bg_cmb_vbeta_full,exo,primer_bg_cmb,vbeta,full,True,True,True,True,False,9,exotic/full/vbeta/exo_primer_bg_cmb_vbeta_full
 exo_uvlf_bg_cmb_vbeta_full,exo,uvlf_bg_cmb,vbeta,full,True,True,True,True,True,9,exotic/full/vbeta/exo_uvlf_bg_cmb_vbeta_full
@@ -23,6 +29,9 @@ exo_uvlf_vshmr_full,exo,uvlf,vshmr,full,True,False,False,True,True,8,exotic/full
 exo_ceers_bg_vshmr_full,exo,ceers_bg,vshmr,full,True,True,False,False,True,8,exotic/full/vshmr/exo_ceers_bg_vshmr_full
 exo_primer_bg_vshmr_full,exo,primer_bg,vshmr,full,True,True,False,True,False,8,exotic/full/vshmr/exo_primer_bg_vshmr_full
 exo_uvlf_bg_vshmr_full,exo,uvlf_bg,vshmr,full,True,True,False,True,True,8,exotic/full/vshmr/exo_uvlf_bg_vshmr_full
+exo_ceers_cmb_vshmr_full,exo,ceers_cmb,vshmr,full,True,False,True,False,True,11,exotic/full/vshmr/exo_ceers_cmb_vshmr_full
+exo_primer_cmb_vshmr_full,exo,primer_cmb,vshmr,full,True,False,True,True,False,11,exotic/full/vshmr/exo_primer_cmb_vshmr_full
+exo_uvlf_cmb_vshmr_full,exo,uvlf_cmb,vshmr,full,True,False,True,True,True,11,exotic/full/vshmr/exo_uvlf_cmb_vshmr_full
 exo_ceers_bg_cmb_vshmr_full,exo,ceers_bg_cmb,vshmr,full,True,True,True,False,True,11,exotic/full/vshmr/exo_ceers_bg_cmb_vshmr_full
 exo_primer_bg_cmb_vshmr_full,exo,primer_bg_cmb,vshmr,full,True,True,True,True,False,11,exotic/full/vshmr/exo_primer_bg_cmb_vshmr_full
 exo_uvlf_bg_cmb_vshmr_full,exo,uvlf_bg_cmb,vshmr,full,True,True,True,True,True,11,exotic/full/vshmr/exo_uvlf_bg_cmb_vshmr_full
@@ -32,6 +41,9 @@ exo_uvlf_fixed_restr,exo,uvlf,fixed,restr,True,False,False,True,True,5,exotic/re
 exo_ceers_bg_fixed_restr,exo,ceers_bg,fixed,restr,True,True,False,False,True,5,exotic/restr/fixed/exo_ceers_bg_fixed_restr
 exo_primer_bg_fixed_restr,exo,primer_bg,fixed,restr,True,True,False,True,False,5,exotic/restr/fixed/exo_primer_bg_fixed_restr
 exo_uvlf_bg_fixed_restr,exo,uvlf_bg,fixed,restr,True,True,False,True,True,5,exotic/restr/fixed/exo_uvlf_bg_fixed_restr
+exo_ceers_cmb_fixed_restr,exo,ceers_cmb,fixed,restr,True,False,True,False,True,8,exotic/restr/fixed/exo_ceers_cmb_fixed_restr
+exo_primer_cmb_fixed_restr,exo,primer_cmb,fixed,restr,True,False,True,True,False,8,exotic/restr/fixed/exo_primer_cmb_fixed_restr
+exo_uvlf_cmb_fixed_restr,exo,uvlf_cmb,fixed,restr,True,False,True,True,True,8,exotic/restr/fixed/exo_uvlf_cmb_fixed_restr
 exo_ceers_bg_cmb_fixed_restr,exo,ceers_bg_cmb,fixed,restr,True,True,True,False,True,8,exotic/restr/fixed/exo_ceers_bg_cmb_fixed_restr
 exo_primer_bg_cmb_fixed_restr,exo,primer_bg_cmb,fixed,restr,True,True,True,True,False,8,exotic/restr/fixed/exo_primer_bg_cmb_fixed_restr
 exo_uvlf_bg_cmb_fixed_restr,exo,uvlf_bg_cmb,fixed,restr,True,True,True,True,True,8,exotic/restr/fixed/exo_uvlf_bg_cmb_fixed_restr
@@ -41,6 +53,9 @@ exo_uvlf_vbeta_restr,exo,uvlf,vbeta,restr,True,False,False,True,True,6,exotic/re
 exo_ceers_bg_vbeta_restr,exo,ceers_bg,vbeta,restr,True,True,False,False,True,6,exotic/restr/vbeta/exo_ceers_bg_vbeta_restr
 exo_primer_bg_vbeta_restr,exo,primer_bg,vbeta,restr,True,True,False,True,False,6,exotic/restr/vbeta/exo_primer_bg_vbeta_restr
 exo_uvlf_bg_vbeta_restr,exo,uvlf_bg,vbeta,restr,True,True,False,True,True,6,exotic/restr/vbeta/exo_uvlf_bg_vbeta_restr
+exo_ceers_cmb_vbeta_restr,exo,ceers_cmb,vbeta,restr,True,False,True,False,True,9,exotic/restr/vbeta/exo_ceers_cmb_vbeta_restr
+exo_primer_cmb_vbeta_restr,exo,primer_cmb,vbeta,restr,True,False,True,True,False,9,exotic/restr/vbeta/exo_primer_cmb_vbeta_restr
+exo_uvlf_cmb_vbeta_restr,exo,uvlf_cmb,vbeta,restr,True,False,True,True,True,9,exotic/restr/vbeta/exo_uvlf_cmb_vbeta_restr
 exo_ceers_bg_cmb_vbeta_restr,exo,ceers_bg_cmb,vbeta,restr,True,True,True,False,True,9,exotic/restr/vbeta/exo_ceers_bg_cmb_vbeta_restr
 exo_primer_bg_cmb_vbeta_restr,exo,primer_bg_cmb,vbeta,restr,True,True,True,True,False,9,exotic/restr/vbeta/exo_primer_bg_cmb_vbeta_restr
 exo_uvlf_bg_cmb_vbeta_restr,exo,uvlf_bg_cmb,vbeta,restr,True,True,True,True,True,9,exotic/restr/vbeta/exo_uvlf_bg_cmb_vbeta_restr
@@ -50,6 +65,9 @@ exo_uvlf_vshmr_restr,exo,uvlf,vshmr,restr,True,False,False,True,True,8,exotic/re
 exo_ceers_bg_vshmr_restr,exo,ceers_bg,vshmr,restr,True,True,False,False,True,8,exotic/restr/vshmr/exo_ceers_bg_vshmr_restr
 exo_primer_bg_vshmr_restr,exo,primer_bg,vshmr,restr,True,True,False,True,False,8,exotic/restr/vshmr/exo_primer_bg_vshmr_restr
 exo_uvlf_bg_vshmr_restr,exo,uvlf_bg,vshmr,restr,True,True,False,True,True,8,exotic/restr/vshmr/exo_uvlf_bg_vshmr_restr
+exo_ceers_cmb_vshmr_restr,exo,ceers_cmb,vshmr,restr,True,False,True,False,True,11,exotic/restr/vshmr/exo_ceers_cmb_vshmr_restr
+exo_primer_cmb_vshmr_restr,exo,primer_cmb,vshmr,restr,True,False,True,True,False,11,exotic/restr/vshmr/exo_primer_cmb_vshmr_restr
+exo_uvlf_cmb_vshmr_restr,exo,uvlf_cmb,vshmr,restr,True,False,True,True,True,11,exotic/restr/vshmr/exo_uvlf_cmb_vshmr_restr
 exo_ceers_bg_cmb_vshmr_restr,exo,ceers_bg_cmb,vshmr,restr,True,True,True,False,True,11,exotic/restr/vshmr/exo_ceers_bg_cmb_vshmr_restr
 exo_primer_bg_cmb_vshmr_restr,exo,primer_bg_cmb,vshmr,restr,True,True,True,True,False,11,exotic/restr/vshmr/exo_primer_bg_cmb_vshmr_restr
 exo_uvlf_bg_cmb_vshmr_restr,exo,uvlf_bg_cmb,vshmr,restr,True,True,True,True,True,11,exotic/restr/vshmr/exo_uvlf_bg_cmb_vshmr_restr
@@ -59,6 +77,9 @@ lcdm_uvlf_fixed_full,lcdm,uvlf,fixed,full,True,False,False,True,True,3,lcdm/full
 lcdm_ceers_bg_fixed_full,lcdm,ceers_bg,fixed,full,True,True,False,False,True,3,lcdm/full/fixed/lcdm_ceers_bg_fixed_full
 lcdm_primer_bg_fixed_full,lcdm,primer_bg,fixed,full,True,True,False,True,False,3,lcdm/full/fixed/lcdm_primer_bg_fixed_full
 lcdm_uvlf_bg_fixed_full,lcdm,uvlf_bg,fixed,full,True,True,False,True,True,3,lcdm/full/fixed/lcdm_uvlf_bg_fixed_full
+lcdm_ceers_cmb_fixed_full,lcdm,ceers_cmb,fixed,full,True,False,True,False,True,6,lcdm/full/fixed/lcdm_ceers_cmb_fixed_full
+lcdm_primer_cmb_fixed_full,lcdm,primer_cmb,fixed,full,True,False,True,True,False,6,lcdm/full/fixed/lcdm_primer_cmb_fixed_full
+lcdm_uvlf_cmb_fixed_full,lcdm,uvlf_cmb,fixed,full,True,False,True,True,True,6,lcdm/full/fixed/lcdm_uvlf_cmb_fixed_full
 lcdm_ceers_bg_cmb_fixed_full,lcdm,ceers_bg_cmb,fixed,full,True,True,True,False,True,6,lcdm/full/fixed/lcdm_ceers_bg_cmb_fixed_full
 lcdm_primer_bg_cmb_fixed_full,lcdm,primer_bg_cmb,fixed,full,True,True,True,True,False,6,lcdm/full/fixed/lcdm_primer_bg_cmb_fixed_full
 lcdm_uvlf_bg_cmb_fixed_full,lcdm,uvlf_bg_cmb,fixed,full,True,True,True,True,True,6,lcdm/full/fixed/lcdm_uvlf_bg_cmb_fixed_full
@@ -68,6 +89,9 @@ lcdm_uvlf_vbeta_full,lcdm,uvlf,vbeta,full,True,False,False,True,True,4,lcdm/full
 lcdm_ceers_bg_vbeta_full,lcdm,ceers_bg,vbeta,full,True,True,False,False,True,4,lcdm/full/vbeta/lcdm_ceers_bg_vbeta_full
 lcdm_primer_bg_vbeta_full,lcdm,primer_bg,vbeta,full,True,True,False,True,False,4,lcdm/full/vbeta/lcdm_primer_bg_vbeta_full
 lcdm_uvlf_bg_vbeta_full,lcdm,uvlf_bg,vbeta,full,True,True,False,True,True,4,lcdm/full/vbeta/lcdm_uvlf_bg_vbeta_full
+lcdm_ceers_cmb_vbeta_full,lcdm,ceers_cmb,vbeta,full,True,False,True,False,True,7,lcdm/full/vbeta/lcdm_ceers_cmb_vbeta_full
+lcdm_primer_cmb_vbeta_full,lcdm,primer_cmb,vbeta,full,True,False,True,True,False,7,lcdm/full/vbeta/lcdm_primer_cmb_vbeta_full
+lcdm_uvlf_cmb_vbeta_full,lcdm,uvlf_cmb,vbeta,full,True,False,True,True,True,7,lcdm/full/vbeta/lcdm_uvlf_cmb_vbeta_full
 lcdm_ceers_bg_cmb_vbeta_full,lcdm,ceers_bg_cmb,vbeta,full,True,True,True,False,True,7,lcdm/full/vbeta/lcdm_ceers_bg_cmb_vbeta_full
 lcdm_primer_bg_cmb_vbeta_full,lcdm,primer_bg_cmb,vbeta,full,True,True,True,True,False,7,lcdm/full/vbeta/lcdm_primer_bg_cmb_vbeta_full
 lcdm_uvlf_bg_cmb_vbeta_full,lcdm,uvlf_bg_cmb,vbeta,full,True,True,True,True,True,7,lcdm/full/vbeta/lcdm_uvlf_bg_cmb_vbeta_full
@@ -77,6 +101,9 @@ lcdm_uvlf_vshmr_full,lcdm,uvlf,vshmr,full,True,False,False,True,True,6,lcdm/full
 lcdm_ceers_bg_vshmr_full,lcdm,ceers_bg,vshmr,full,True,True,False,False,True,6,lcdm/full/vshmr/lcdm_ceers_bg_vshmr_full
 lcdm_primer_bg_vshmr_full,lcdm,primer_bg,vshmr,full,True,True,False,True,False,6,lcdm/full/vshmr/lcdm_primer_bg_vshmr_full
 lcdm_uvlf_bg_vshmr_full,lcdm,uvlf_bg,vshmr,full,True,True,False,True,True,6,lcdm/full/vshmr/lcdm_uvlf_bg_vshmr_full
+lcdm_ceers_cmb_vshmr_full,lcdm,ceers_cmb,vshmr,full,True,False,True,False,True,9,lcdm/full/vshmr/lcdm_ceers_cmb_vshmr_full
+lcdm_primer_cmb_vshmr_full,lcdm,primer_cmb,vshmr,full,True,False,True,True,False,9,lcdm/full/vshmr/lcdm_primer_cmb_vshmr_full
+lcdm_uvlf_cmb_vshmr_full,lcdm,uvlf_cmb,vshmr,full,True,False,True,True,True,9,lcdm/full/vshmr/lcdm_uvlf_cmb_vshmr_full
 lcdm_ceers_bg_cmb_vshmr_full,lcdm,ceers_bg_cmb,vshmr,full,True,True,True,False,True,9,lcdm/full/vshmr/lcdm_ceers_bg_cmb_vshmr_full
 lcdm_primer_bg_cmb_vshmr_full,lcdm,primer_bg_cmb,vshmr,full,True,True,True,True,False,9,lcdm/full/vshmr/lcdm_primer_bg_cmb_vshmr_full
 lcdm_uvlf_bg_cmb_vshmr_full,lcdm,uvlf_bg_cmb,vshmr,full,True,True,True,True,True,9,lcdm/full/vshmr/lcdm_uvlf_bg_cmb_vshmr_full
@@ -86,6 +113,9 @@ lcdm_uvlf_fixed_restr,lcdm,uvlf,fixed,restr,True,False,False,True,True,3,lcdm/re
 lcdm_ceers_bg_fixed_restr,lcdm,ceers_bg,fixed,restr,True,True,False,False,True,3,lcdm/restr/fixed/lcdm_ceers_bg_fixed_restr
 lcdm_primer_bg_fixed_restr,lcdm,primer_bg,fixed,restr,True,True,False,True,False,3,lcdm/restr/fixed/lcdm_primer_bg_fixed_restr
 lcdm_uvlf_bg_fixed_restr,lcdm,uvlf_bg,fixed,restr,True,True,False,True,True,3,lcdm/restr/fixed/lcdm_uvlf_bg_fixed_restr
+lcdm_ceers_cmb_fixed_restr,lcdm,ceers_cmb,fixed,restr,True,False,True,False,True,6,lcdm/restr/fixed/lcdm_ceers_cmb_fixed_restr
+lcdm_primer_cmb_fixed_restr,lcdm,primer_cmb,fixed,restr,True,False,True,True,False,6,lcdm/restr/fixed/lcdm_primer_cmb_fixed_restr
+lcdm_uvlf_cmb_fixed_restr,lcdm,uvlf_cmb,fixed,restr,True,False,True,True,True,6,lcdm/restr/fixed/lcdm_uvlf_cmb_fixed_restr
 lcdm_ceers_bg_cmb_fixed_restr,lcdm,ceers_bg_cmb,fixed,restr,True,True,True,False,True,6,lcdm/restr/fixed/lcdm_ceers_bg_cmb_fixed_restr
 lcdm_primer_bg_cmb_fixed_restr,lcdm,primer_bg_cmb,fixed,restr,True,True,True,True,False,6,lcdm/restr/fixed/lcdm_primer_bg_cmb_fixed_restr
 lcdm_uvlf_bg_cmb_fixed_restr,lcdm,uvlf_bg_cmb,fixed,restr,True,True,True,True,True,6,lcdm/restr/fixed/lcdm_uvlf_bg_cmb_fixed_restr
@@ -95,6 +125,9 @@ lcdm_uvlf_vbeta_restr,lcdm,uvlf,vbeta,restr,True,False,False,True,True,4,lcdm/re
 lcdm_ceers_bg_vbeta_restr,lcdm,ceers_bg,vbeta,restr,True,True,False,False,True,4,lcdm/restr/vbeta/lcdm_ceers_bg_vbeta_restr
 lcdm_primer_bg_vbeta_restr,lcdm,primer_bg,vbeta,restr,True,True,False,True,False,4,lcdm/restr/vbeta/lcdm_primer_bg_vbeta_restr
 lcdm_uvlf_bg_vbeta_restr,lcdm,uvlf_bg,vbeta,restr,True,True,False,True,True,4,lcdm/restr/vbeta/lcdm_uvlf_bg_vbeta_restr
+lcdm_ceers_cmb_vbeta_restr,lcdm,ceers_cmb,vbeta,restr,True,False,True,False,True,7,lcdm/restr/vbeta/lcdm_ceers_cmb_vbeta_restr
+lcdm_primer_cmb_vbeta_restr,lcdm,primer_cmb,vbeta,restr,True,False,True,True,False,7,lcdm/restr/vbeta/lcdm_primer_cmb_vbeta_restr
+lcdm_uvlf_cmb_vbeta_restr,lcdm,uvlf_cmb,vbeta,restr,True,False,True,True,True,7,lcdm/restr/vbeta/lcdm_uvlf_cmb_vbeta_restr
 lcdm_ceers_bg_cmb_vbeta_restr,lcdm,ceers_bg_cmb,vbeta,restr,True,True,True,False,True,7,lcdm/restr/vbeta/lcdm_ceers_bg_cmb_vbeta_restr
 lcdm_primer_bg_cmb_vbeta_restr,lcdm,primer_bg_cmb,vbeta,restr,True,True,True,True,False,7,lcdm/restr/vbeta/lcdm_primer_bg_cmb_vbeta_restr
 lcdm_uvlf_bg_cmb_vbeta_restr,lcdm,uvlf_bg_cmb,vbeta,restr,True,True,True,True,True,7,lcdm/restr/vbeta/lcdm_uvlf_bg_cmb_vbeta_restr
@@ -104,6 +137,9 @@ lcdm_uvlf_vshmr_restr,lcdm,uvlf,vshmr,restr,True,False,False,True,True,6,lcdm/re
 lcdm_ceers_bg_vshmr_restr,lcdm,ceers_bg,vshmr,restr,True,True,False,False,True,6,lcdm/restr/vshmr/lcdm_ceers_bg_vshmr_restr
 lcdm_primer_bg_vshmr_restr,lcdm,primer_bg,vshmr,restr,True,True,False,True,False,6,lcdm/restr/vshmr/lcdm_primer_bg_vshmr_restr
 lcdm_uvlf_bg_vshmr_restr,lcdm,uvlf_bg,vshmr,restr,True,True,False,True,True,6,lcdm/restr/vshmr/lcdm_uvlf_bg_vshmr_restr
+lcdm_ceers_cmb_vshmr_restr,lcdm,ceers_cmb,vshmr,restr,True,False,True,False,True,9,lcdm/restr/vshmr/lcdm_ceers_cmb_vshmr_restr
+lcdm_primer_cmb_vshmr_restr,lcdm,primer_cmb,vshmr,restr,True,False,True,True,False,9,lcdm/restr/vshmr/lcdm_primer_cmb_vshmr_restr
+lcdm_uvlf_cmb_vshmr_restr,lcdm,uvlf_cmb,vshmr,restr,True,False,True,True,True,9,lcdm/restr/vshmr/lcdm_uvlf_cmb_vshmr_restr
 lcdm_ceers_bg_cmb_vshmr_restr,lcdm,ceers_bg_cmb,vshmr,restr,True,True,True,False,True,9,lcdm/restr/vshmr/lcdm_ceers_bg_cmb_vshmr_restr
 lcdm_primer_bg_cmb_vshmr_restr,lcdm,primer_bg_cmb,vshmr,restr,True,True,True,True,False,9,lcdm/restr/vshmr/lcdm_primer_bg_cmb_vshmr_restr
 lcdm_uvlf_bg_cmb_vshmr_restr,lcdm,uvlf_bg_cmb,vshmr,restr,True,True,True,True,True,9,lcdm/restr/vshmr/lcdm_uvlf_bg_cmb_vshmr_restr

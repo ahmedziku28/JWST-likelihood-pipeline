@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --job-name=lcdm_ceers_bg_cmb_fixed_restr
+#SBATCH --job-name=exo_uvlf_cmb_vbeta_full
 #SBATCH --nodes=1
 #SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02,nut05
-#SBATCH --output=lcdm_ceers_bg_cmb_fixed_restr.log
-#SBATCH --error=lcdm_ceers_bg_cmb_fixed_restr.err
+#SBATCH --output=exo_uvlf_cmb_vbeta_full.log
+#SBATCH --error=exo_uvlf_cmb_vbeta_full.err
 #SBATCH --ntasks=8
 #SBATCH --time=175:00:00
 #SBATCH --cpus-per-task=1
@@ -32,7 +32,7 @@ python -c "import classy; print('Loaded CLASS from:', classy.__file__)"
 # ── Auto-retry loop ──────────────────────────────────────────────────
 max_retries=50
 retry_count=0
-command="mpirun -np $SLURM_NTASKS cobaya-run lcdm_ceers_bg_cmb_fixed_restr.yaml --resume"
+command="mpirun -np $SLURM_NTASKS cobaya-run exo_uvlf_cmb_vbeta_full.yaml --resume"
 
 until $command; do
   exit_code=$?

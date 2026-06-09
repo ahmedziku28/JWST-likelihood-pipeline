@@ -118,8 +118,10 @@ TEST_RUNS = [
 UVLF_DATA_COMBOS = [
     'ceers',         'primer',         'uvlf',
     'ceers_bg',      'primer_bg',      'uvlf_bg',
+    'ceers_cmb',     'primer_cmb',     'uvlf_cmb',       # UVLF + CMB, no BG
     'ceers_bg_cmb',  'primer_bg_cmb',  'uvlf_bg_cmb',
 ]
+
 SHMR_OPTIONS = ['fixed', 'vbeta', 'vshmr']
 ZCUT_OPTIONS = ['full', 'restr']
 MODELS       = ['exo', 'lcdm']
@@ -180,12 +182,23 @@ def build_all_runs():
                 'shmr': None, 'zcut': None,
                 'n_sampled_params': P_cosmo + P_exo,
                 'folder_path': "non_uvlf/{}".format(run_name),
-            }
-    return runs
+    }
+
+    # Filter: only return runs whose YAML has been scaffolded on disk.
+    # This lets generate_all_runs.py defer creation of new combos (e.g.,
+    # the uvlf×CMB family) without polluting status/auto with phantom
+    # entries. Runs added back later via generate_all_runs are picked
+    # up automatically on the next run_manager invocation.
+    materialized = {}
+    for rn, cfg in runs.items():
+        yaml_path = os.path.join(RUNS_ROOT, cfg['folder_path'], rn + '.yaml')
+        if os.path.isfile(yaml_path):
+            materialized[rn] = cfg
+    return materialized
 
 
 # ============================================================================
-#  PRIORITY ORDER — deterministic 112-element list
+#  PRIORITY ORDER — deterministic 148-element list
 #
 #  Ordering rule:
 #    primary:    zcut (full before restr)
@@ -196,9 +209,14 @@ def build_all_runs():
 # ============================================================================
 
 _DATA_PRIORITY = [
-    'uvlf_bg_cmb',   'uvlf_bg',        'uvlf',
-    'primer_bg_cmb', 'ceers_bg_cmb',
+    # Combined-survey rows (Donnan + Finkelstein joint)
+    'uvlf_bg_cmb',   'uvlf_cmb',       'uvlf_bg',        'uvlf',
+    # CMB-bearing single-survey rows
+    'primer_bg_cmb', 'primer_cmb',
+    'ceers_bg_cmb',  'ceers_cmb',
+    # BG-only single-survey rows
     'primer_bg',     'ceers_bg',
+    # UVLF-only single-survey rows
     'primer',        'ceers',
 ]
 
@@ -234,7 +252,8 @@ def _c(text, color):
         return text
     codes = {'green': '32', 'yellow': '33', 'red': '31',
              'cyan': '36', 'gray': '90', 'bold': '1', 'magenta': '35',
-             'blue': '34'}
+             'blue': '34', 'strike_gray': '9;90'}
+    
     return '\033[{}m{}\033[0m'.format(codes.get(color, '0'), text)
 
 
@@ -246,7 +265,8 @@ STATUS_SYMBOL = {
     'STALLED':   ('!', 'yellow'),
     'FAILED':    ('✗', 'red'),
     'PAUSED':    ('||', 'magenta'),
-    'ZOMBIE':    ('?', 'blue'),   # bonus — was also gray, also confusing
+    'ZOMBIE':    ('?', 'blue'),
+    'REDUNDANT': ('─', 'strike_gray'),
 }
 
 INTERESTING_TRANSITIONS = {
@@ -785,8 +805,8 @@ def _chains_recently_active(folder, run_name, threshold_hours=0.5):
     return age_hours < threshold_hours
 
 
-def get_status(run_name, all_runs, state):
-    # type: (str, Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]) -> Dict[str, Any]
+def get_status(run_name, all_runs, state, redundant_filters=None):
+    # type: (str, Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]], Optional[List[Dict[str, str]]]) -> Dict[str, Any]
     """Determine status of a single run.
 
     Returns dict with keys:
@@ -816,6 +836,15 @@ def get_status(run_name, all_runs, state):
     # 0. PAUSED — explicit user pause (set by `pause --all`) overrides all else
     if entry.get('paused', False):
         info['status'] = 'PAUSED'
+        info['job_id'] = entry.get('job_id')
+        return info
+    
+    # 0a. REDUNDANT — matches a filter in .redundant_filters.json.
+    #     Persistent campaign-level exclusion, computed from cfg + filters file.
+    if redundant_filters is None:
+        redundant_filters = _load_redundant_filters()
+    if _is_redundant(cfg, redundant_filters):
+        info['status'] = 'REDUNDANT'
         info['job_id'] = entry.get('job_id')
         return info
 
@@ -937,11 +966,60 @@ def _log_status_transitions(statuses, state):
 
 def get_all_statuses(all_runs, state, log_transitions=True):
     # type: (Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]], bool) -> Dict[str, Dict[str, Any]]
-    statuses = {rn: get_status(rn, all_runs, state) for rn in all_runs}
+    # Load the filters file once and pass through to get_status so each
+    # per-run call doesn't re-read the disk.
+    redundant_filters = _load_redundant_filters()
+    statuses = {rn: get_status(rn, all_runs, state, redundant_filters)
+                for rn in all_runs}
     if log_transitions:
         if _log_status_transitions(statuses, state):
             save_state(state)
     return statuses
+
+
+
+REDUNDANT_FILTERS_PATH = os.path.join(RUNS_ROOT, '.redundant_filters.json')
+
+
+def _load_redundant_filters():
+    # type: () -> List[Dict[str, str]]
+    """Load the list of {field: value} filter dicts. Each dict's clauses
+    are AND'd; the list itself is OR'd (a run matches if ANY dict matches)."""
+    if not os.path.isfile(REDUNDANT_FILTERS_PATH):
+        return []
+    try:
+        with open(REDUNDANT_FILTERS_PATH) as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def _save_redundant_filters(filters):
+    # type: (List[Dict[str, str]]) -> None
+    with open(REDUNDANT_FILTERS_PATH, 'w') as f:
+        json.dump(filters, f, indent=2)
+
+
+def _is_redundant(cfg, filters):
+    # type: (Dict[str, Any], List[Dict[str, str]]) -> bool
+    """True iff cfg matches at least one filter (each filter's clauses AND'd)."""
+    for filt in filters:
+        if all(str(cfg.get(k)) == str(v) for k, v in filt.items()):
+            return True
+    return False
+
+
+def _parse_filter_arg(arg):
+    # type: (str) -> Dict[str, str]
+    """Parse 'data=uvlf,model=lcdm' into {'data': 'uvlf', 'model': 'lcdm'}."""
+    result = {}
+    for clause in arg.split(','):
+        clause = clause.strip()
+        if '=' not in clause:
+            continue
+        k, v = clause.split('=', 1)
+        result[k.strip()] = v.strip()
+    return result
 
 # ============================================================================
 #  COMMAND: status
@@ -951,8 +1029,9 @@ def cmd_status(all_runs, state):
     # type: (Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]) -> None
     statuses = get_all_statuses(all_runs, state)
     counts = {}
-    for s in ('CONVERGED', 'RUNNING', 'QUEUED', 'PENDING', 'STALLED', 'FAILED', 'ZOMBIE', 'PAUSED'):
+    for s in ('CONVERGED', 'RUNNING', 'QUEUED', 'PENDING', 'STALLED', 'FAILED', 'ZOMBIE', 'PAUSED', 'REDUNDANT'):
         counts[s] = sum(1 for v in statuses.values() if v['status'] == s)
+        
 
     total = len(all_runs)
     conv  = counts['CONVERGED']
@@ -966,35 +1045,55 @@ def cmd_status(all_runs, state):
     print()
     print("  " + "  ".join(
         "{} {}".format(_fmt_status(s)[:30], counts[s])
-        for s in ('CONVERGED', 'RUNNING', 'QUEUED', 'PENDING', 'STALLED', 'FAILED', 'ZOMBIE', 'PAUSED')
+        for s in ('CONVERGED', 'RUNNING', 'QUEUED', 'PENDING', 'STALLED', 'FAILED', 'ZOMBIE', 'PAUSED', 'REDUNDANT')
     ))
     print()
 
     # Pair display: each exo run paired with its lcdm counterpart
     print(_c("  Pairs (exotic | LCDM)", 'bold'))
-    print("  " + "-" * 86)
+    print("  " + "-" * 133)
 
-    # Build canonical pair list in priority order
+    # Build canonical pair list in priority order. Skip pairs where NEITHER
+    # side is materialized — those phantom rows are produced because PRIORITY_ORDER
+    # still contains all 148 names (full + restr + every survey combo) while
+    # all_runs only contains the scaffolded subset. Without this skip, the
+    # render falls back to "  |  " for both sides and leaves lonely separator
+    # rows in the middle of the table.
     seen = set()
     pairs = []  # list of (stem, exo_name, lcdm_name)
     for rn in PRIORITY_ORDER:
         if rn in seen:
             continue
         if rn.startswith('exo_'):
-            stem  = rn[len('exo_'):]
-            other = 'lcdm_' + stem
+            stem    = rn[len('exo_'):]
+            partner = 'lcdm_' + stem
         elif rn.startswith('lcdm_'):
-            stem  = rn[len('lcdm_'):]
-            other = 'exo_' + stem
+            stem    = rn[len('lcdm_'):]
+            partner = 'exo_' + stem
         else:
             continue
-        if other not in all_runs:
-            other = None
-        pairs.append((stem, rn if rn.startswith('exo_') else other,
-                      other if rn.startswith('exo_') else rn))
+
+        rn_present      = rn in all_runs
+        partner_present = partner in all_runs
+
+        # Phantom pair (neither side scaffolded) — skip entirely
+        if not rn_present and not partner_present:
+            seen.add(rn)
+            seen.add(partner)
+            continue
+
+        # Normalize so the tuple is always (stem, exo_or_None, lcdm_or_None)
+        if rn.startswith('exo_'):
+            exo_name  = rn      if rn_present      else None
+            lcdm_name = partner if partner_present else None
+        else:
+            lcdm_name = rn      if rn_present      else None
+            exo_name  = partner if partner_present else None
+
+        pairs.append((stem, exo_name, lcdm_name))
         seen.add(rn)
-        if other:
-            seen.add(other)
+        seen.add(partner)
+        
 
     # Pre-compute health lookup from cached .health.json files (cheap I/O only)
     health_lookup = {}
@@ -1007,8 +1106,8 @@ def cmd_status(all_runs, state):
                 health_lookup[rn] = cached
 
     for stem, exo_name, lcdm_name in pairs:
-        exo_str  = _format_pair_cell(exo_name,  statuses, health_lookup) if exo_name  in statuses else " " * 40
-        lcdm_str = _format_pair_cell(lcdm_name, statuses, health_lookup) if lcdm_name in statuses else " " * 40
+        exo_str  = _format_pair_cell(exo_name,  statuses, health_lookup) if exo_name  in statuses else " " * 65
+        lcdm_str = _format_pair_cell(lcdm_name, statuses, health_lookup) if lcdm_name in statuses else " " * 65
         print("  {} | {}".format(exo_str, lcdm_str))
     print()
     
@@ -1074,6 +1173,7 @@ def _format_pair_cell(run_name, statuses, health_lookup=None):
     # type: (str, Dict[str, Dict[str, Any]], Optional[Dict[str, Optional[Dict[str, Any]]]]) -> str
     info = statuses[run_name]
     base = "{:<30s} {}".format(run_name[:30], _fmt_status(info['status']))
+    
 
     if info['status'] == 'CONVERGED' and info['rminus1'] is not None:
         # Final certified R-1 from .progress / .sh epilogue — the certified value
@@ -1091,8 +1191,9 @@ def _format_pair_cell(run_name, statuses, health_lookup=None):
 
     # pad to align column (bumped to accommodate dual-R-1 tag)
     visible_len = _visible_length(base)
-    if visible_len < 60:
-        base += " " * (60 - visible_len)
+    target = 65
+    if visible_len < target:
+        base += " " * (target - visible_len)
 
     if info.get('chain_warning'):
         base += "  " + _c("⚠ " + info['chain_warning'], 'red')
@@ -1241,6 +1342,86 @@ def cmd_test(all_runs, state):
     print("    Converged test runs will NOT be resubmitted by launch/auto.")
     print()
 
+    
+def cmd_redundant(arg, all_runs, state):
+    # type: (Optional[str], Dict[str, Dict[str, Any]], Dict[str, Dict[str, Any]]) -> None
+    """Toggle a redundant filter. With no arg, lists current filters.
+    With a 'k=v[,k=v...]' arg, adds the filter if absent or removes it if present."""
+    filters = _load_redundant_filters()
+
+    # No arg → list mode
+    if not arg:
+        if not filters:
+            print(_c("  No redundant filters defined.", 'gray'))
+            return
+        print(_c("  Current redundant filters:", 'bold'))
+        total = 0
+        for filt in filters:
+            matched = [rn for rn, cfg in all_runs.items()
+                       if all(str(cfg.get(k)) == str(v) for k, v in filt.items())]
+            total += len(matched)
+            label = ','.join("{}={}".format(k, v) for k, v in filt.items())
+            print("    {:<40s}  ({} runs)".format(label, len(matched)))
+        print(_c("  Total runs marked REDUNDANT: {}".format(total), 'gray'))
+        return
+
+    new_filter = _parse_filter_arg(arg)
+    if not new_filter:
+        print(_c("  Invalid filter: '{}'. Use key=value (e.g., data=uvlf).".format(arg), 'red'))
+        return
+
+    # Toggle: remove if exact match present, else add
+    if new_filter in filters:
+        filters.remove(new_filter)
+        _save_redundant_filters(filters)
+        n = sum(1 for _, cfg in all_runs.items()
+                if all(str(cfg.get(k)) == str(v) for k, v in new_filter.items()))
+        print(_c("  ✓ Filter removed. {} runs no longer REDUNDANT.".format(n), 'green'))
+        print(_c("    Auto daemon may pick them up on the next poll.", 'gray'))
+        return
+
+    # Adding — show matches and confirm if many
+    matched = [rn for rn, cfg in all_runs.items()
+               if all(str(cfg.get(k)) == str(v) for k, v in new_filter.items())]
+    if not matched:
+        print(_c("  No runs match filter: {}".format(arg), 'yellow'))
+        return
+
+    print(_c("  Filter '{}' will mark {} run(s) as REDUNDANT:".format(arg, len(matched)), 'bold'))
+    for rn in matched[:8]:
+        print("    {}".format(rn))
+    if len(matched) > 8:
+        print("    ... and {} more".format(len(matched) - 8))
+
+    if len(matched) >= 5:
+        ans = input(_c("  Scancel any active and exclude from auto? [y/N]: ", 'cyan'))
+        if ans.strip().lower() not in ('y', 'yes'):
+            print(_c("  Aborted.", 'gray'))
+            return
+
+    # Scancel active matches
+    statuses = get_all_statuses(all_runs, state, log_transitions=False)
+    n_scancel = 0
+    for rn in matched:
+        if statuses[rn]['status'] in ('RUNNING', 'QUEUED'):
+            job_id = state.get(rn, {}).get('job_id')
+            if job_id:
+                try:
+                    subprocess.run(['scancel', str(job_id)], check=False, timeout=10,
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    n_scancel += 1
+                except Exception:
+                    pass
+
+    filters.append(new_filter)
+    _save_redundant_filters(filters)
+
+    print(_c("  ✓ Filter added. {} run(s) now REDUNDANT.".format(len(matched)), 'green'))
+    if n_scancel:
+        print(_c("  ✓ scancelled {} active job(s).".format(n_scancel), 'green'))
+    print(_c("  Toggle off: python run_manager.py redundant {}".format(arg), 'gray'))
+    
+    
 # ============================================================================
 #  COMMANDS: throttle / pause / resume / drain (live control)
 # ============================================================================
@@ -1558,9 +1739,14 @@ def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO, skip_prompts=Fa
                          if s['status'] in ('RUNNING', 'QUEUED'))
             converged = sum(1 for s in statuses.values()
                             if s['status'] == 'CONVERGED')
+            
+            
+            redundant_filters = _load_redundant_filters()
             pending = [rn for rn in PRIORITY_ORDER
                        if rn in all_runs
-                       and statuses[rn]['status'] in ('PENDING', 'PAUSED')]
+                       and statuses[rn]['status'] in ('PENDING', 'PAUSED')
+                       and not _is_redundant(all_runs[rn], redundant_filters)]
+            
 
             ts = datetime.now().strftime('%H:%M:%S')
             tag = _c(" [PAUSED]", 'yellow') if paused else ""
@@ -1602,7 +1788,7 @@ def cmd_auto(N, all_runs, state, poll_seconds=POLL_SECONDS_AUTO, skip_prompts=Fa
                             print(_c("    ✓ auto-launched {} (job {})".format(rn, job_id), 'green'))
 
             if converged == len(all_runs):
-                print(_c("\n  All 112 runs converged. Campaign complete.", 'green'))
+                print(_c("\n  All {} runs converged. Campaign complete.".format(len(all_runs)), 'green'))
                 return
 
             sleep_for = PAUSED_POLL_SECONDS if paused else poll_seconds
@@ -4365,9 +4551,12 @@ def main():
         sys.exit(1)
 
     all_runs = build_all_runs()
-    if len(all_runs) != 112:
-        print(_c("  [ERROR] build_all_runs() returned {} runs (expected 112).".format(len(all_runs)), 'red'))
+    if not (1 <= len(all_runs) <= 148):
+        print(_c("  [ERROR] build_all_runs() returned {} runs (expected 1..148, "
+                 "where 148 = 112 originals + 36 new uvlf×CMB). Are the scaffolding files "
+                 "in place? Run generate_all_runs.py to fix.".format(len(all_runs)), 'red'))
         sys.exit(1)
+        
 
     state = load_state()
     cmd = sys.argv[1]
@@ -4548,6 +4737,11 @@ def main():
             print("  Usage: python run_manager.py doctor <run_name>")
             sys.exit(1)
         cmd_doctor(sys.argv[2], all_runs, state)
+        
+    elif cmd == 'redundant':
+        arg = sys.argv[2] if len(sys.argv) > 2 else None
+        cmd_redundant(arg, all_runs, state)
+        
     elif cmd == 'storage':
         sub = sys.argv[2] if len(sys.argv) >= 3 else None
         cmd_storage(sub, all_runs, state)

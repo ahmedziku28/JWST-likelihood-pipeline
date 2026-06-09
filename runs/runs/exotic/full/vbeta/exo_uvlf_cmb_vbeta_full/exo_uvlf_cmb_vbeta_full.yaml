@@ -10,6 +10,7 @@ theory:
       N_ur: 2.0328
       P_k_max_1/Mpc: 150.0
       z_max_pk: 16.0
+      non_linear: halofit
 
 # ── Likelihood ─────────────────────────────────────────────
 likelihood:
@@ -18,12 +19,16 @@ likelihood:
     integrate_bin: True
     use_volume_correction: True
     n_gl: 2
-    z_min_donnan: 10.0
-    z_min_finkelstein: 10.9
+    z_min_donnan: 9.0
+    z_min_finkelstein: 8.9
     use_donnan_bins: True
     use_finkelstein_bins: True
     vary_SHMR: False
     vary_beta: True
+  planck_2018_lowl.TT_clik: null
+  planck_2018_lowl.EE_clik: null
+  planck_2018_highl_plik.TTTEEE_lite: null
+  planck_2018_lensing.native: null
 
 # ── Polygon physicality prior (H^2(z) >= 0) ────────────────
 prior:
@@ -35,13 +40,13 @@ params:
   # ── Exotic DE sampled ──
   a_samp:
     prior: {min: -350.0, max: -1.0e-10}
-    ref: {min: -75.0, max: -5.0}
+    ref: {min: -100.0, max: -5.0}
     proposal: 6.0
     drop: true
     latex: a_{\rm samp}
   s:
     prior: {min: -1000.0, max: -1.0e-10}
-    ref: {min: -250.0, max: -50.0}
+    ref: {min: -300.0, max: -50.0}
     proposal: 18.0
     drop: true
     latex: \mathcal{S}
@@ -57,36 +62,37 @@ params:
     derived: 'lambda a_exo: a_exo * 5.45846e-6'
     latex: \Omega_{\mathrm{x},0}
 
-  # ── Sampled cosmological (non-CMB) ──
-  H0:
-    prior: {min: 60.0, max: 80.0}
-    ref: {dist: norm, loc: 67.4, scale: 4.0}
-    proposal: 0.5
-    latex: H_0
+  # ── Sampled cosmological (CMB) ──
+  theta_s_100:
+    prior: {min: 0.9, max: 1.2}
+    ref: {dist: norm, loc: 1.0416, scale: 0.0004}
+    proposal: 0.0002
+    latex: 100\theta_{\rm s}
   omega_b:
-    prior: {min: 0.015, max: 0.030}
+    prior: {min: 0.005, max: 0.04}
     ref: {dist: norm, loc: 0.02237, scale: 0.00010}
     proposal: 0.00008
     latex: \Omega_{\rm b} h^2
   omega_cdm:
     prior: {min: 0.05, max: 0.18}
-    ref: {dist: norm, loc: 0.1200, scale: 0.002}
-    proposal: 0.001
+    ref: {dist: norm, loc: 0.12, scale: 0.001}
+    proposal: 0.0005
     latex: \Omega_{\rm c} h^2
-
-  # ── Fixed primordial / CMB-like parameters ──
   tau_reio:
-    value: 0.0544
+    prior: {min: 0.01, max: 0.8}
+    ref: {dist: norm, loc: 0.055, scale: 0.006}
+    proposal: 0.003
     latex: \tau_{\rm reio}
   logA:
-    value: 3.044
+    prior: {min: 1.61, max: 3.91}
+    ref: {dist: norm, loc: 3.05, scale: 0.001}
+    proposal: 0.001
     drop: true
     latex: \log(10^{10} A_{\rm s})
-  A_s:
-    value: 'lambda logA: 1e-10*np.exp(logA)'
-    latex: A_{\rm s}
   n_s:
-    value: 0.9649
+    prior: {min: 0.8, max: 1.2}
+    ref: {dist: norm, loc: 0.965, scale: 0.004}
+    proposal: 0.002
     latex: n_{\rm s}
 
   # ── SHMR sampled (vary beta only) ──
@@ -125,11 +131,18 @@ params:
   rs_drag:
     derived: true
     latex: r_{\rm s,drag} \,[\rm Mpc]
+  H0:
+    latex: H_0
+  A_s:
+    value: 'lambda logA: 1e-10*np.exp(logA)'
+    latex: A_{\rm s}
+  z_reio:
+    latex: z_{\rm re}
 
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/exotic/restr/vbeta/exo_uvlf_vbeta_restr/exo_uvlf_vbeta_restr.covmat
+    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/exotic/full/vbeta/exo_uvlf_cmb_vbeta_full/exo_uvlf_cmb_vbeta_full.covmat
     drag: true
     oversample_power: 0.4
     proposal_scale: 1.9
@@ -138,4 +151,4 @@ sampler:
     learn_every: '11d'
     max_tries: 2000
 
-output: outputs/exo_uvlf_vbeta_restr
+output: outputs/exo_uvlf_cmb_vbeta_full

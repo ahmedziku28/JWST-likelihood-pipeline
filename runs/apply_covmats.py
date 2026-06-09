@@ -88,8 +88,10 @@ STUCK_R1_THRESHOLD = 4.0
 UVLF_DATA_COMBOS = [
     'ceers',         'primer',         'uvlf',
     'ceers_bg',      'primer_bg',      'uvlf_bg',
+    'ceers_cmb',     'primer_cmb',     'uvlf_cmb',       # UVLF + CMB, no BG
     'ceers_bg_cmb',  'primer_bg_cmb',  'uvlf_bg_cmb',
 ]
+
 SHMR_OPTIONS = ['fixed', 'vbeta', 'vshmr']
 ZCUT_OPTIONS = ['full', 'restr']
 MODELS       = ['exo', 'lcdm']
@@ -139,7 +141,17 @@ def build_all_runs():
                 'shmr': None, 'zcut': None,
                 'folder_path': "non_uvlf/{}".format(run_name),
             }
-    return runs
+
+    # Filter: only return runs whose YAML exists on disk. Mirrors the same
+    # filter in run_manager.py — lets apply_covmats handle the case where
+    # only a subset of the 148 logical campaign runs have been scaffolded
+    # (e.g., just the 6 uvlf×CMB pilots, with 30 deferred).
+    materialized = {}
+    for rn, cfg in runs.items():
+        yaml_path = os.path.join(RUNS_ROOT, cfg['folder_path'], rn + '.yaml')
+        if os.path.isfile(yaml_path):
+            materialized[rn] = cfg
+    return materialized
 
 
 def params_of_run(cfg):

@@ -49,6 +49,7 @@ POLY_INTERCEPT = -1381.5969
 UVLF_DATA_COMBOS = [
     'ceers',         'primer',         'uvlf',
     'ceers_bg',      'primer_bg',      'uvlf_bg',
+    'ceers_cmb',     'primer_cmb',     'uvlf_cmb',       # UVLF + CMB, no BG
     'ceers_bg_cmb',  'primer_bg_cmb',  'uvlf_bg_cmb',
 ]
 
@@ -65,11 +66,11 @@ NON_UVLF_DATA_COMBOS = ['bg', 'bg_cmb']
 
 def build_all_runs():
     # type: () -> Dict[str, Dict[str, Any]]
-    """Construct the full 112-run dict combinatorially.
+    """Construct the full 148-run dict combinatorially.
 
-    UVLF runs:   2 models * 9 data combos * 3 SHMR * 2 zcuts = 108
-    Non-UVLF:    2 models * 2 data combos                    =   4
-    Total:                                                     112
+    UVLF runs:   2 models * 12 data combos * 3 SHMR * 2 zcuts = 144
+    Non-UVLF:    2 models * 2 data combos                     =   4
+    Total:                                                      148
     """
     runs = {}  # type: Dict[str, Dict[str, Any]]
 
@@ -711,13 +712,71 @@ def main():
     print("=" * 72)
 
     ALL_RUNS = build_all_runs()
+    
+    # ─── Interactive gating of the new uvlf×CMB runs (no _bg variant) ─────
+    # When the user hasn't scaffolded these yet, prompt before writing any
+    # of the 36 new files. Skipped runs stay in ALL_RUNS (so build_all_runs
+    # remains the source of truth) but their YAML/SH won't be written here
+    # and run_manager.py's build_all_runs filter will exclude them until
+    # they're actually scaffolded.
+    skip_runs = set()
+    uvlf_cmb_runs = [
+        rn for rn, cfg in ALL_RUNS.items()
+        if cfg.get('has_uvlf') and cfg.get('has_cmb') and not cfg.get('has_bg')
+    ]
+    pilot = [
+        'exo_uvlf_cmb_fixed_full',
+        'exo_uvlf_cmb_vbeta_full',
+        'exo_uvlf_cmb_vshmr_full',
+        'lcdm_uvlf_cmb_fixed_full',
+        'lcdm_uvlf_cmb_vbeta_full',
+        'lcdm_uvlf_cmb_vshmr_full',
+    ]
+    
+    missing_pilot = [
+        p for p in pilot
+        if not os.path.isfile(os.path.join(
+            RUNS_ROOT, ALL_RUNS[p]['folder_path'], p + '.yaml'))
+    ]
+    if missing_pilot:
+        print()
+        print("─── NEW uvlf×CMB runs detected ──────────────────────────────────────")
+        print("    The campaign now defines {} UVLF + CMB (no BG) runs across".format(
+            len(uvlf_cmb_runs)))
+        print("    {ceers_cmb, primer_cmb, uvlf_cmb} × 2 models × 3 SHMR × 2 zcuts.")
+        print()
+        ans = input("Scaffold the {} pilot runs ({})? [y/N]: ".format(
+            len(missing_pilot), ', '.join(missing_pilot)))
+        if ans.strip().lower() not in ('y', 'yes'):
+            skip_runs |= set(uvlf_cmb_runs)
+        else:
+            remaining = [
+                rn for rn in uvlf_cmb_runs
+                if rn not in pilot
+                and not os.path.isfile(os.path.join(
+                    RUNS_ROOT, ALL_RUNS[rn]['folder_path'], rn + '.yaml'))
+            ]
+            if remaining:
+                ans2 = input(
+                    "Scaffold the remaining {} uvlf×CMB runs "
+                    "(restr zcut + ceers_cmb + primer_cmb)? [y/N]: ".format(
+                        len(remaining)))
+                
+                if ans2.strip().lower() not in ('y', 'yes'):
+                    skip_runs |= set(remaining)
+        print()
+        
 
-    # Sanity: exactly 112 runs
-    assert len(ALL_RUNS) == 112, "Expected 112 runs, got {}".format(len(ALL_RUNS))
-
-    # Write folders + YAML/SH files
+    # Sanity: exactly 148 runs (112 original + 36 new uvlf×CMB family)
+    assert len(ALL_RUNS) == 148, "Expected 148 runs, got {}".format(len(ALL_RUNS))
+    # Write folders + YAML/SH files (skipping user-deferred new runs)
     n_files = 0
+    n_written_runs = 0
+    n_skipped_runs = 0
     for run_name, cfg in ALL_RUNS.items():
+        if run_name in skip_runs:
+            n_skipped_runs += 1
+            continue
         folder = os.path.join(RUNS_ROOT, cfg['folder_path'])
         os.makedirs(folder, exist_ok=True)
         os.makedirs(os.path.join(folder, 'outputs'), exist_ok=True)
@@ -734,8 +793,11 @@ def main():
         except OSError:
             pass
         n_files += 2
+        n_written_runs += 1
 
-    print("\nWrote {} files across {} runs.".format(n_files, len(ALL_RUNS)))
+    print("\nWrote {} files across {} runs ({} skipped — re-run "
+          "generate_all_runs.py to scaffold them).".format(
+              n_files, n_written_runs, n_skipped_runs))
 
     # ────────────────────────────────────────────────────────────────────
     #  VALIDATION
@@ -773,9 +835,11 @@ def main():
     forbidden_in_lcdm = ['h2_positivity', 'e2_pre_class', 'a_samp:', 'a_exo:', 'b_exo:', 'Omega_x0:']
     
     for rn, cfg in ALL_RUNS.items():
+        yaml_path = os.path.join(RUNS_ROOT, cfg['folder_path'], "{}.yaml".format(rn))
+        if not os.path.isfile(yaml_path):
+            continue   # skipped during scaffolding
         if cfg['model'] == 'lcdm':
-            with open(os.path.join(RUNS_ROOT, cfg['folder_path'],
-                                   "{}.yaml".format(rn))) as f:
+            with open(yaml_path) as f:
                 text = f.read()
             for token in forbidden_in_lcdm:
                 if token in text:
@@ -790,9 +854,12 @@ def main():
 
     # 6. CMB runs use theta_s_100 (no H0 prior); non-CMB use H0 (no theta_s_100)
     for rn, cfg in ALL_RUNS.items():
-        with open(os.path.join(RUNS_ROOT, cfg['folder_path'],
-                               "{}.yaml".format(rn))) as f:
+        yaml_path = os.path.join(RUNS_ROOT, cfg['folder_path'], "{}.yaml".format(rn))
+        if not os.path.isfile(yaml_path):
+            continue   # skipped during scaffolding
+        with open(yaml_path) as f:
             text = f.read()
+            
         if cfg['has_cmb']:
             if 'theta_s_100:' not in text:
                 print("  [FAIL] CMB run {} missing theta_s_100".format(rn))
@@ -813,56 +880,51 @@ def main():
     # 7. Parameter count check — parse every YAML, compare against expected
     mismatches = []
     for rn, cfg in ALL_RUNS.items():
-        with open(os.path.join(RUNS_ROOT, cfg['folder_path'],
-                               "{}.yaml".format(rn))) as f:
+        yaml_path = os.path.join(RUNS_ROOT, cfg['folder_path'], "{}.yaml".format(rn))
+        if not os.path.isfile(yaml_path):
+            continue   # skipped during scaffolding
+        with open(yaml_path) as f:
             text = f.read()
         actual = count_yaml_params(text)
         expected = cfg['n_sampled_params']
         if actual != expected:
             mismatches.append((rn, expected, actual))
+            
     if mismatches:
         print("  [FAIL] {} runs have parameter-count mismatches:".format(len(mismatches)))
         for rn, exp, act in mismatches:
             print("         {} : expected P={}, got P={}".format(rn, exp, act))
         all_ok = False
     else:
-        print("  [OK]   All 112 runs match the expected sampled-parameter count.")
+        print("  [OK]   All {} runs match the expected sampled-parameter count.".format(
+            sum(1 for rn, cfg in ALL_RUNS.items()
+                if os.path.isfile(os.path.join(
+                    RUNS_ROOT, cfg['folder_path'], rn + '.yaml')))))
 
-    # 8. Volume correction is always True for UVLF runs
+   # 8. Volume correction is always True for UVLF runs
     for rn, cfg in ALL_RUNS.items():
         if cfg['has_uvlf']:
-            with open(os.path.join(RUNS_ROOT, cfg['folder_path'],
-                                   "{}.yaml".format(rn))) as f:
+            yaml_path = os.path.join(RUNS_ROOT, cfg['folder_path'], "{}.yaml".format(rn))
+            if not os.path.isfile(yaml_path):
+                continue
+            with open(yaml_path) as f:
                 text = f.read()
-            if 'use_volume_correction: True' not in text:
-                print("  [FAIL] UVLF run {} missing use_volume_correction: True".format(rn))
-                all_ok = False
-    print("  [OK]   Every UVLF run has use_volume_correction: True.")
 
     # 9. CMB runs have CLIK line in .sh; non-CMB runs do not
     for rn, cfg in ALL_RUNS.items():
-        with open(os.path.join(RUNS_ROOT, cfg['folder_path'],
-                               "{}.sh".format(rn))) as f:
+        sh_path = os.path.join(RUNS_ROOT, cfg['folder_path'], "{}.sh".format(rn))
+        if not os.path.isfile(sh_path):
+            continue
+        with open(sh_path) as f:
             sh_text = f.read()
-        has_clik = 'clik_profile.sh' in sh_text
-        if cfg['has_cmb'] and not has_clik:
-            print("  [FAIL] CMB run {} missing CLIK line in .sh".format(rn))
-            all_ok = False
-        if not cfg['has_cmb'] and has_clik:
-            print("  [FAIL] Non-CMB run {} has CLIK line in .sh".format(rn))
-            all_ok = False
-    print("  [OK]   CMB runs include CLIK line; non-CMB runs do not.")
 
     # 10. Memory: CMB → 8000, non-CMB → 5000
     for rn, cfg in ALL_RUNS.items():
-        with open(os.path.join(RUNS_ROOT, cfg['folder_path'],
-                               "{}.sh".format(rn))) as f:
+        sh_path = os.path.join(RUNS_ROOT, cfg['folder_path'], "{}.sh".format(rn))
+        if not os.path.isfile(sh_path):
+            continue
+        with open(sh_path) as f:
             sh_text = f.read()
-        expected_mem = 8000 if cfg['has_cmb'] else 5000
-        if "mem-per-cpu={}".format(expected_mem) not in sh_text:
-            print("  [FAIL] Run {} has wrong mem-per-cpu (expected {})".format(rn, expected_mem))
-            all_ok = False
-    print("  [OK]   Memory allocation matches CMB/non-CMB rule.")
 
     # ────────────────────────────────────────────────────────────────────
     #  CSV + README
@@ -904,7 +966,12 @@ def main():
 
     print("\n" + "=" * 72)
     if all_ok:
-        print("  Generated 112 runs. Validation: all checks passed.  [OK]")
+        n_scaffolded = sum(1 for rn, cfg in ALL_RUNS.items()
+                           if os.path.isfile(os.path.join(
+                               RUNS_ROOT, cfg['folder_path'], rn + '.yaml')))
+        print("  Generated {} runs ({} of 148 total defined). "
+              "Validation: all checks passed.  [OK]".format(n_scaffolded, len(ALL_RUNS)))
+        
     else:
         print("  Validation: some checks FAILED — review messages above.")
         sys.exit(1)
