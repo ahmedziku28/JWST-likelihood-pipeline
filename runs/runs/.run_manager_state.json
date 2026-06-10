@@ -70,7 +70,7 @@
   "exo_primer_bg_cmb_fixed_full": {
     "attempts": 1,
     "job_id": "29102",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-09T05:04:07.644806"
   },
   "exo_primer_bg_cmb_fixed_restr": {
@@ -142,7 +142,7 @@
     "attempts": 2,
     "auto_resubmit_attempts": 0,
     "job_id": "29036",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-04T18:39:09.366527"
   },
   "exo_uvlf_bg_cmb_vbeta_restr": {
@@ -163,7 +163,7 @@
     "attempts": 3,
     "auto_resubmit_attempts": 0,
     "job_id": "29043",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-05T05:01:02.428756"
   },
   "exo_uvlf_bg_fixed_full": {
@@ -179,7 +179,7 @@
   "exo_uvlf_bg_vbeta_full": {
     "attempts": 1,
     "job_id": "29085",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-06T14:25:15.225188"
   },
   "exo_uvlf_bg_vbeta_restr": {
@@ -195,21 +195,21 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29108",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-09T12:35:34.472403"
   },
   "exo_uvlf_cmb_vbeta_full": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29110",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-10T01:26:28.028213"
   },
   "exo_uvlf_cmb_vshmr_full": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29111",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-10T02:30:30.907762"
   },
   "exo_uvlf_fixed_full": {
@@ -429,7 +429,7 @@
     "attempts": 2,
     "auto_resubmit_attempts": 0,
     "job_id": "29095",
-    "last_known_status": "RUNNING",
+    "last_known_status": "STALLED",
     "submitted_at": "2026-06-07T17:05:27.127543"
   },
   "lcdm_uvlf_bg_vbeta_restr": {
@@ -445,21 +445,21 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29107",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-09T12:35:25.789761"
   },
   "lcdm_uvlf_cmb_vbeta_full": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29109",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-10T01:26:19.752361"
   },
   "lcdm_uvlf_cmb_vshmr_full": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29106",
-    "last_known_status": "RUNNING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-09T05:49:58.452997"
   },
   "lcdm_uvlf_fixed_full": {
