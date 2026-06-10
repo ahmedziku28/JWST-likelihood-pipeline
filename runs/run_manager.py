@@ -833,18 +833,19 @@ def get_status(run_name, all_runs, state, redundant_filters=None):
 
     entry = state.get(run_name, {})
 
-    # 0. PAUSED — explicit user pause (set by `pause --all`) overrides all else
-    if entry.get('paused', False):
-        info['status'] = 'PAUSED'
-        info['job_id'] = entry.get('job_id')
-        return info
-    
-    # 0a. REDUNDANT — matches a filter in .redundant_filters.json.
-    #     Persistent campaign-level exclusion, computed from cfg + filters file.
+    # 0. REDUNDANT — persistent campaign-level exclusion. Takes precedence
+    #    over PAUSED so a paused-then-redundant run isn't picked up by
+    #    cmd_resubmit_all_paused or similar paused-aware operations.
     if redundant_filters is None:
         redundant_filters = _load_redundant_filters()
     if _is_redundant(cfg, redundant_filters):
         info['status'] = 'REDUNDANT'
+        info['job_id'] = entry.get('job_id')
+        return info
+
+    # 0a. PAUSED — temporary explicit user pause
+    if entry.get('paused', False):
+        info['status'] = 'PAUSED'
         info['job_id'] = entry.get('job_id')
         return info
 
@@ -1181,11 +1182,18 @@ def _format_pair_cell(run_name, statuses, health_lookup=None):
 
     elif info['status'] == 'RUNNING':
         health = health_lookup.get(run_name) if health_lookup else None
-        elapsed_h = (info.get('elapsed_seconds') or 0) / 3600.0
-        if health is not None and elapsed_h >= HEALTH_STATUS_MIN_HOURS:
+        # Health cache existence is the right gate, not elapsed_seconds.
+        # _compute_health only succeeds when chains have parseable samples,
+        # so a cached health dict already means past "warming up". The old
+        # elapsed_h check was unreliable because _squeue_info returns None
+        # when SLURM is slow, leaving elapsed_seconds unset → falsely "warming up"
+        # even for runs that have been alive for days.
+        if health is not None:
             tag = _format_health_tag(health)
             if tag:
                 base += "  " + tag
+            else:
+                base += "  " + _c("[warming up]", 'gray')
         else:
             base += "  " + _c("[warming up]", 'gray')
 
@@ -1600,7 +1608,10 @@ def cmd_resubmit_all_paused(all_runs, state):
     """Submit every PAUSED run (cobaya --resume from chain files). Clears the
     paused flag and resets auto_resubmit_attempts.
     """
-    targets = [rn for rn in all_runs if state.get(rn, {}).get('paused', False)]
+    redundant_filters = _load_redundant_filters()
+    targets = [rn for rn in all_runs
+               if state.get(rn, {}).get('paused', False)
+               and not _is_redundant(all_runs[rn], redundant_filters)]
     if not targets:
         print("  No PAUSED runs to resubmit.")
         return
@@ -2507,9 +2518,19 @@ def cmd_submit(arg, all_runs, state):
     if arg not in all_runs:
         print(_c("  Unknown run: {}".format(arg), 'red'))
         return
+
+    # Block REDUNDANT runs — manual submit was the leak path that put
+    # lcdm_uvlf_vshmr_full into SLURM despite the campaign-level filter.
+    redundant_filters = _load_redundant_filters()
+    if _is_redundant(all_runs[arg], redundant_filters):
+        print(_c("  {} matches a REDUNDANT filter — submit blocked.".format(arg), 'yellow'))
+        print(_c("  To override: python run_manager.py redundant <filter>   (toggles filter off)", 'gray'))
+        print(_c("  Then retry submit.", 'gray'))
+        return
     targets = [arg]
 
     _prompt_cmb_cpu_bump([all_runs[rn] for rn in targets])
+    
 
     for rn in targets:
         job_id = submit_run(all_runs[rn])
