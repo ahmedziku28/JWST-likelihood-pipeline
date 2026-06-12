@@ -33,7 +33,7 @@ params:
     proposal: 0.5
     latex: H_0
   omega_b:
-    prior: {min: 0.018, max: 0.024}
+    prior: {min: 0.020, max: 0.0245}
     ref: {dist: norm, loc: 0.02237, scale: 0.00010}
     proposal: 0.00008
     latex: \Omega_{\rm b} h^2
@@ -104,7 +104,7 @@ sampler:
     proposal_scale: 1.4
     Rminus1_stop: 0.02
     Rminus1_cl_stop: 0.2
-    learn_every: '11d'
+    learn_every: '20d'
     max_tries: 2000
 
 output: outputs/lcdm_primer_vbeta_restr

@@ -33,6 +33,10 @@ likelihood:
   planck_2018_highl_plik.TTTEEE_lite: null
   planck_2018_lensing.native: null
 
+# ── Top-level prior block ──────────────────────────────────
+prior:
+  bbn_omega_b: "lambda omega_b: -0.5 * ((omega_b - 0.02235) / 0.00037)**2"
+
 # ── Parameters ─────────────────────────────────────────────
 params:
   # ── Sampled cosmological (CMB) ──
@@ -42,7 +46,7 @@ params:
     proposal: 0.0002
     latex: 100\theta_{\rm s}
   omega_b:
-    prior: {dist: norm, loc: 0.02235, scale: 0.00037}
+    prior: {min: 0.020, max: 0.0245}
     ref: {dist: norm, loc: 0.02237, scale: 0.00010}
     proposal: 0.00008
     latex: \Omega_{\rm b} h^2
@@ -121,7 +125,7 @@ sampler:
     proposal_scale: 1.9
     Rminus1_stop: 0.02
     Rminus1_cl_stop: 0.2
-    learn_every: '11d'
+    learn_every: '15d'
     max_tries: 2000
 
 output: outputs/lcdm_primer_bg_cmb_vbeta_restr

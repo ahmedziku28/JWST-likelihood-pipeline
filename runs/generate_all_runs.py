@@ -221,25 +221,45 @@ def make_yaml(cfg):
 
     L.append("")
 
-    # ── Polygon physicality prior (exotic only) ───────────────────────────
+    # ── Top-level prior block ─────────────────────────────────────────────
+    # Three potential entries:
+    #  - h2_positivity (exo only): rejects (a_samp, s) below the polygon line
+    #  - e2_pre_class  (exo only): rejects worst-case Ω_m before CLASS
+    #  - bbn_omega_b   (has_bg):   BBN Gaussian shape inside the hard-bounded
+    #                              omega_b range. The HARD cap is enforced by
+    #                              param-level min/max (cobaya rejects
+    #                              out-of-bounds proposals before CLASS), so
+    #                              this lambda just adds the Gaussian shape
+    #                              inside [0.020, 0.024]. Equivalent to a
+    #                              truncated-normal prior, written readably.
+    prior_entries = []
+
     if cfg['model'] == 'exo':
-        L.append("# ── Polygon physicality prior (H^2(z) >= 0) ────────────────")
-        L.append("prior:")
         # Render intercept sign cleanly: "+ 0.5" or "- 1381.5969", not "+ -1381.5969"
         if POLY_INTERCEPT >= 0:
             intercept_str = "+ {}".format(POLY_INTERCEPT)
         else:
             intercept_str = "- {}".format(abs(POLY_INTERCEPT))
-        L.append('  h2_positivity: "lambda a_samp, s: 0.0 if s >= ({} * a_samp {}) else -1e500"'.format(
-            POLY_SLOPE, intercept_str))
-        
-        # Pre-CLASS E² safety check (rejects worst-case Ω_m proposals that
-        # would crash CLASS's background ODE / θ_s shooter). Defined in
-        # pipeline/exo_de_priors.py. Only meaningful when ω_b and ω_cdm
-        # are sampled
-        L.append("  e2_pre_class: \"__import__('likelihood.exo_de_priors', fromlist=['_']).e2_safety_pre_class\"")
-        L.append("")
+        prior_entries.append(
+            '  h2_positivity: "lambda a_samp, s: 0.0 if s >= ({} * a_samp {}) else -1e500"'.format(
+                POLY_SLOPE, intercept_str))
+        prior_entries.append(
+            "  e2_pre_class: \"__import__('likelihood.exo_de_priors', fromlist=['_']).e2_safety_pre_class\"")
 
+    if cfg['has_bg']:
+        # BBN Gaussian log-prior, evaluated inside the param's hard [min, max]
+        # bound. loc=0.02235, scale=0.00037 — same BBN values that were
+        # previously encoded as the Gaussian prior distribution on omega_b.
+        prior_entries.append(
+            '  bbn_omega_b: "lambda omega_b: -0.5 * ((omega_b - 0.02235) / 0.00037)**2"')
+
+    if prior_entries:
+        L.append("# ── Top-level prior block ──────────────────────────────────")
+        L.append("prior:")
+        for entry in prior_entries:
+            L.append(entry)
+        L.append("")
+        
 
     # ── Params ───────────────────────────────────────────────────────────
     L.append("# ── Parameters ─────────────────────────────────────────────")
@@ -293,11 +313,16 @@ def make_yaml(cfg):
         L.append("    proposal: 0.0002")
         L.append("    latex: 100\\theta_{\\rm s}")
 
-        # omega_b prior: BBN if bg present; wide uniform if CMB only (theoretical only here)
+       # omega_b prior. Hard min/max bounds prevent CLASS crashes by
+        # rejecting out-of-range proposals BEFORE CLASS is called. The BBN
+        # Gaussian shape (when has_bg) is restored via the top-level
+        # `prior:` block as a log-prior lambda (see prior_entries above).
+        # In the CMB branch, Planck already constrains omega_b tightly,
+        # so the bounds here are essentially redundant safety margins.
         if cfg['has_bg']:
-            omega_b_prior = "{dist: norm, loc: 0.02235, scale: 0.00037}"
+            omega_b_prior = "{min: 0.020, max: 0.0245}"
         else:
-            omega_b_prior = "{min: 0.005, max: 0.04}"
+            omega_b_prior = "{min: 0.018, max: 0.026}"   # CMB-only: wider, Planck does the work
         L.append("  omega_b:")
         L.append("    prior: " + omega_b_prior)
         L.append("    ref: {dist: norm, loc: 0.02237, scale: 0.00010}")
@@ -339,15 +364,15 @@ def make_yaml(cfg):
         L.append("    proposal: 0.5")
         L.append("    latex: H_0")
 
-        # omega_b prior. Three cases:
-        #  - has_bg: BBN Gaussian (tight, prevents CLASS-invalid drift)
-        #  - no bg, no CMB: uniform but capped well below CLASS BBN table cutoff (0.025)
-        #    Old upper bound 0.030 lets random-walk drift hit CLASS-invalid region;
-        #    cap at 0.024 to keep chains safely inside CLASS's interpolation table.
-        if cfg['has_bg']:
-            omega_b_prior = "{dist: norm, loc: 0.02235, scale: 0.00037}"
-        else:
-            omega_b_prior = "{min: 0.018, max: 0.024}"   # was {min: 0.015, max: 0.030}
+        # omega_b prior with HARD upper bound at 0.0245 (well below CLASS's BBN
+        # interpolation cutoff at 0.025). cobaya checks prior bounds BEFORE
+        # calling CLASS, so out-of-range proposals are rejected without ever
+        # touching the cosmology computation — no CLASS crashes, no chain traps.
+        #
+        # When has_bg, the BBN Gaussian shape is restored via a top-level
+        # log-prior lambda (in the `prior:` block). When no has_bg and no CMB,
+        # we just use the flat uniform bound — no shape constraint.
+        omega_b_prior = "{min: 0.020, max: 0.0245}"
         L.append("  omega_b:")
         L.append("    prior: " + omega_b_prior)
         L.append("    ref: {dist: norm, loc: 0.02237, scale: 0.00010}")
@@ -489,7 +514,20 @@ def make_yaml(cfg):
     L.append("    proposal_scale: {}".format(proposal_scale_val))
     L.append("    Rminus1_stop: 0.02")
     L.append("    Rminus1_cl_stop: 0.2")
-    L.append("    learn_every: '11d'")
+
+    # learn_every: when cobaya replaces the donor covmat with a chain-learned
+    # one. For weakly-anchored cells ((no-CMB) × vshmr), chains take longer
+    # to reach equilibrium, so relearning at '11d' (~88 accepts/chain) can
+    # lock in a non-equilibrium covmat and trap outer-ridge chains. Delay
+    # the first relearn for these cells.
+    if not cfg.get('has_cmb', False) and cfg.get('shmr') == 'vshmr':
+        learn_every_val = "'40d'"
+    elif not cfg.get('has_cmb', False) and cfg.get('shmr') == 'vbeta':
+        learn_every_val = "'20d'"
+    else:
+        learn_every_val = "'15d'"
+    L.append("    learn_every: {}".format(learn_every_val))
+    
     # Survive sporadic CLASS shooting failures during burn-in
     # 2000 gives huge margin without ever
     # masking a real stuck chain because by then the run is unrecoverable
@@ -748,38 +786,65 @@ def main():
         'lcdm_uvlf_cmb_vbeta_full',
         'lcdm_uvlf_cmb_vshmr_full',
     ]
-    
-    missing_pilot = [
-        p for p in pilot
-        if not os.path.isfile(os.path.join(
-            RUNS_ROOT, ALL_RUNS[p]['folder_path'], p + '.yaml'))
-    ]
-    if missing_pilot:
+
+    # Figure out what's missing in each category, INDEPENDENTLY.
+    # Previously these prompts were nested (the remaining-prompt only fired
+    # if the pilot prompt also fired) which meant once the 6 pilots were
+    # scaffolded, the remaining-prompt never reappeared and subsequent runs
+    # auto-wrote the remaining 30 without asking. Now each category has its
+    # own independent prompt that fires whenever YAMLs in that category are
+    # missing on disk.
+
+    def _missing(run_list):
+        return [
+            rn for rn in run_list
+            if not os.path.isfile(os.path.join(
+                RUNS_ROOT, ALL_RUNS[rn]['folder_path'], rn + '.yaml'))
+        ]
+
+    missing_pilot = _missing(pilot)
+    missing_remaining = _missing([rn for rn in uvlf_cmb_runs if rn not in pilot])
+
+    if missing_pilot or missing_remaining:
         print()
-        print("─── NEW uvlf×CMB runs detected ──────────────────────────────────────")
-        print("    The campaign now defines {} UVLF + CMB (no BG) runs across".format(
+        print("─── uvlf×CMB family — scaffolding check ─────────────────────────────")
+        print("    Campaign defines {} UVLF+CMB (no BG) runs across".format(
             len(uvlf_cmb_runs)))
         print("    {ceers_cmb, primer_cmb, uvlf_cmb} × 2 models × 3 SHMR × 2 zcuts.")
         print()
-        ans = input("Scaffold the {} pilot runs ({})? [y/N]: ".format(
+
+    # Prompt 1: pilots (6 headline full-zcut uvlf_cmb runs)
+    if missing_pilot:
+        ans = input("Scaffold the {} missing PILOT runs ({})? [y/N]: ".format(
             len(missing_pilot), ', '.join(missing_pilot)))
         if ans.strip().lower() not in ('y', 'yes'):
-            skip_runs |= set(uvlf_cmb_runs)
-        else:
-            remaining = [
-                rn for rn in uvlf_cmb_runs
-                if rn not in pilot
-                and not os.path.isfile(os.path.join(
-                    RUNS_ROOT, ALL_RUNS[rn]['folder_path'], rn + '.yaml'))
-            ]
-            if remaining:
-                ans2 = input(
-                    "Scaffold the remaining {} uvlf×CMB runs "
-                    "(restr zcut + ceers_cmb + primer_cmb)? [y/N]: ".format(
-                        len(remaining)))
-                
-                if ans2.strip().lower() not in ('y', 'yes'):
-                    skip_runs |= set(remaining)
+            skip_runs |= set(missing_pilot)
+        print()
+
+    # Prompt 2: remaining (restr-zcut variants + ceers_cmb + primer_cmb cells)
+    # This now runs INDEPENDENTLY of the pilot prompt. Even if all 6 pilots
+    # already exist, this still fires whenever any non-pilot uvlf_cmb YAML
+    # is missing on disk.
+    if missing_remaining:
+        # Break down by category for clarity in the prompt
+        restr_zcut    = [rn for rn in missing_remaining if rn.endswith('_restr')]
+        ceers_runs    = [rn for rn in missing_remaining if '_ceers_' in rn]
+        primer_runs   = [rn for rn in missing_remaining if '_primer_' in rn]
+
+        print("Remaining uvlf×CMB runs not yet scaffolded ({} total):".format(
+            len(missing_remaining)))
+        if restr_zcut:
+            print("    • {} restr-zcut".format(len(restr_zcut)))
+        if ceers_runs:
+            print("    • {} ceers_cmb".format(len(ceers_runs)))
+        if primer_runs:
+            print("    • {} primer_cmb".format(len(primer_runs)))
+        print()
+        ans = input(
+            "Scaffold these {} additional uvlf×CMB runs? [y/N]: ".format(
+                len(missing_remaining)))
+        if ans.strip().lower() not in ('y', 'yes'):
+            skip_runs |= set(missing_remaining)
         print()
         
 

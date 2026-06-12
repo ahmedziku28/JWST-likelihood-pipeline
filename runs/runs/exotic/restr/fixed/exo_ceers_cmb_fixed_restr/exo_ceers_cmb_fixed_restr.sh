@@ -6,7 +6,7 @@
 #SBATCH --error=exo_ceers_cmb_fixed_restr.err
 #SBATCH --ntasks=8
 #SBATCH --time=175:00:00
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=8000
 
 echo "======================================================"
