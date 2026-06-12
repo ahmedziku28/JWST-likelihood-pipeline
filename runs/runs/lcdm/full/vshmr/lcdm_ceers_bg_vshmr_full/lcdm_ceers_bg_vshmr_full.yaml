@@ -115,7 +115,7 @@ sampler:
     covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/lcdm/full/vshmr/lcdm_ceers_bg_vshmr_full/lcdm_ceers_bg_vshmr_full.covmat
     drag: true
     oversample_power: 0.4
-    proposal_scale: 1.9
+    proposal_scale: 1.0
     Rminus1_stop: 0.02
     Rminus1_cl_stop: 0.2
     learn_every: '11d'

@@ -64,7 +64,7 @@ params:
     proposal: 0.5
     latex: H_0
   omega_b:
-    prior: {min: 0.015, max: 0.030}
+    prior: {min: 0.018, max: 0.024}
     ref: {dist: norm, loc: 0.02237, scale: 0.00010}
     proposal: 0.00008
     latex: \Omega_{\rm b} h^2

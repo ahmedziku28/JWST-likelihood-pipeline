@@ -105,7 +105,7 @@ sampler:
     covmat: auto
     drag: true
     oversample_power: 0.4
-    proposal_scale: 1.9
+    proposal_scale: 1.4
     Rminus1_stop: 0.02
     Rminus1_cl_stop: 0.2
     learn_every: '11d'

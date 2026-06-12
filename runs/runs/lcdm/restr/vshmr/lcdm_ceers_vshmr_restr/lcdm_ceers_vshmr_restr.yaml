@@ -33,7 +33,7 @@ params:
     proposal: 0.5
     latex: H_0
   omega_b:
-    prior: {min: 0.015, max: 0.030}
+    prior: {min: 0.018, max: 0.024}
     ref: {dist: norm, loc: 0.02237, scale: 0.00010}
     proposal: 0.00008
     latex: \Omega_{\rm b} h^2
@@ -111,7 +111,7 @@ sampler:
     covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/lcdm/restr/vshmr/lcdm_ceers_vshmr_restr/lcdm_ceers_vshmr_restr.covmat
     drag: true
     oversample_power: 0.4
-    proposal_scale: 1.9
+    proposal_scale: 1.0
     Rminus1_stop: 0.02
     Rminus1_cl_stop: 0.2
     learn_every: '11d'

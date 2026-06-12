@@ -339,16 +339,21 @@ def make_yaml(cfg):
         L.append("    proposal: 0.5")
         L.append("    latex: H_0")
 
-        # omega_b prior: BBN if bg present; tight uniform if no bg, no CMB
+        # omega_b prior. Three cases:
+        #  - has_bg: BBN Gaussian (tight, prevents CLASS-invalid drift)
+        #  - no bg, no CMB: uniform but capped well below CLASS BBN table cutoff (0.025)
+        #    Old upper bound 0.030 lets random-walk drift hit CLASS-invalid region;
+        #    cap at 0.024 to keep chains safely inside CLASS's interpolation table.
         if cfg['has_bg']:
             omega_b_prior = "{dist: norm, loc: 0.02235, scale: 0.00037}"
         else:
-            omega_b_prior = "{min: 0.015, max: 0.030}"
+            omega_b_prior = "{min: 0.018, max: 0.024}"   # was {min: 0.015, max: 0.030}
         L.append("  omega_b:")
         L.append("    prior: " + omega_b_prior)
         L.append("    ref: {dist: norm, loc: 0.02237, scale: 0.00010}")
         L.append("    proposal: 0.00008")
         L.append("    latex: \\Omega_{\\rm b} h^2")
+        
 
         L.append("  omega_cdm:")
         L.append("    prior: {min: 0.05, max: 0.18}")
@@ -464,13 +469,24 @@ def make_yaml(cfg):
     drag_val           = 'true' if has_fast_block else 'false'
     oversample_pow_val = '0.4'  if has_fast_block else '0'
 
+    # proposal_scale: choose conservatively for cells with weak cosmology constraints.
+    # The (no-CMB × vshmr) cells have a wide (omega_b, omega_cdm, shmr_N) degeneracy;
+    # at proposal_scale=1.9 chains drift up that ridge into CLASS-invalid omega_b > 0.025.
+    # Lowering to 1.0 for these cells keeps proposals inside the BBN table.
+    if not cfg.get('has_cmb', False) and cfg.get('shmr') == 'vshmr':
+        proposal_scale_val = 1.0    # was 1.9 — too aggressive for unanchored cosmology
+    elif not cfg.get('has_cmb', False) and cfg.get('shmr') == 'vbeta':
+        proposal_scale_val = 1.4    # moderate compromise: vbeta has 1 SHMR param, less degeneracy
+    else:
+        proposal_scale_val = 1.9    # default — fine for CMB-anchored cells
+
     L.append("# ── Sampler ────────────────────────────────────────────────")
     L.append("sampler:")
     L.append("  mcmc:")
     L.append("    covmat: auto")
     L.append("    drag: {}".format(drag_val))
     L.append("    oversample_power: {}".format(oversample_pow_val))
-    L.append("    proposal_scale: 1.9")
+    L.append("    proposal_scale: {}".format(proposal_scale_val))
     L.append("    Rminus1_stop: 0.02")
     L.append("    Rminus1_cl_stop: 0.2")
     L.append("    learn_every: '11d'")
