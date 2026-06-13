@@ -557,7 +557,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29109",
-    "last_known_status": "ZOMBIE",
+    "last_known_status": "RUNNING",
     "submitted_at": "2026-06-10T01:26:19.752361"
   },
   "lcdm_uvlf_cmb_vbeta_restr": {
