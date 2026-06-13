@@ -396,7 +396,10 @@
     "last_known_status": "PENDING"
   },
   "lcdm_primer_bg_cmb_vbeta_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "job_id": "29312",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-06-13T10:21:03.702202"
   },
   "lcdm_primer_bg_cmb_vbeta_restr": {
     "last_known_status": "PENDING"
@@ -558,7 +561,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29106",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-06-09T05:49:58.452997"
   },
   "lcdm_uvlf_cmb_vshmr_restr": {
