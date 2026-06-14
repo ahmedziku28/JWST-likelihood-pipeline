@@ -263,6 +263,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29317",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-14T14:41:20.111991"
   },
   "exo_uvlf_cmb_vshmr_restr": {
@@ -562,6 +563,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29318",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-14T14:41:52.019401"
   },
   "lcdm_uvlf_cmb_vbeta_restr": {
