@@ -108,7 +108,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/builders/builder_lcdm_vshmr/outputs/builder_lcdm_vshmr.covmat
+    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/lcdm/restr/vshmr/lcdm_uvlf_vshmr_restr/lcdm_uvlf_vshmr_restr.covmat
     drag: true
     oversample_power: 0.4
     proposal_scale: 1.0
