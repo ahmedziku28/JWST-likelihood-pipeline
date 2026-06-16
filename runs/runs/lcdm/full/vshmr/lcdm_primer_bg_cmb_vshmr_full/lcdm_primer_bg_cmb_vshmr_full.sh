@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=lcdm_primer_bg_cmb_vshmr_full
 #SBATCH --nodes=1
-#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02,nut05
+#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02
 #SBATCH --output=lcdm_primer_bg_cmb_vshmr_full.log
 #SBATCH --error=lcdm_primer_bg_cmb_vshmr_full.err
 #SBATCH --ntasks=8

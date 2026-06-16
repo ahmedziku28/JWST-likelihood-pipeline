@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=exo_primer_cmb_vbeta_full
 #SBATCH --nodes=1
-#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02,nut05
+#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02
 #SBATCH --output=exo_primer_cmb_vbeta_full.log
 #SBATCH --error=exo_primer_cmb_vbeta_full.err
 #SBATCH --ntasks=8
