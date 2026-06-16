@@ -147,7 +147,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: /home/lustre_p/ahmed.omar/workspace/exo_de_project/runs/runs/exotic/full/vbeta/exo_primer_bg_cmb_vbeta_full/exo_primer_bg_cmb_vbeta_full.covmat
+    covmat: exo_primer_bg_cmb_vbeta_full.covmat
     drag: true
     oversample_power: 0.4
     proposal_scale: 1.9
