@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=exo_primer_bg_cmb_vshmr_restr
 #SBATCH --nodes=1
-#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02
+#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02,nut05
 #SBATCH --output=exo_primer_bg_cmb_vshmr_restr.log
 #SBATCH --error=exo_primer_bg_cmb_vshmr_restr.err
 #SBATCH --ntasks=8
