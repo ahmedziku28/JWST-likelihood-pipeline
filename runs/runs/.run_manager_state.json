@@ -271,7 +271,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29325",
-    "last_known_status": "PENDING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-16T21:22:56.086873"
   },
   "exo_uvlf_fixed_full": {
