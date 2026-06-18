@@ -142,7 +142,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: auto
+    covmat: exo_uvlf_cmb_vbeta_full.covmat
     drag: true
     oversample_power: 0.4
     proposal_scale: 1.9
