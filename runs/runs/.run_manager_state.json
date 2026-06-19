@@ -252,7 +252,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29328",
-    "last_known_status": "QUEUED",
+    "last_known_status": "RUNNING",
     "submitted_at": "2026-06-18T18:25:51.436962"
   },
   "exo_uvlf_cmb_vbeta_full": {
@@ -427,7 +427,7 @@
   "lcdm_primer_bg_cmb_vshmr_full": {
     "attempts": 1,
     "job_id": "29314",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-06-13T17:06:23.363968"
   },
   "lcdm_primer_bg_cmb_vshmr_restr": {
@@ -588,7 +588,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29331",
-    "last_known_status": "PENDING",
+    "last_known_status": "QUEUED",
     "submitted_at": "2026-06-18T18:26:44.838529"
   },
   "lcdm_uvlf_cmb_vshmr_full": {
