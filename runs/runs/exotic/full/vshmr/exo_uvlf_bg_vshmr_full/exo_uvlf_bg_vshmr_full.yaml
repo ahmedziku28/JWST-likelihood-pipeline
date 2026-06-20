@@ -144,7 +144,7 @@ params:
 # ── Sampler ────────────────────────────────────────────────
 sampler:
   mcmc:
-    covmat: auto
+    covmat: exo_uvlf_bg_vshmr_full.covmat
     drag: false
     oversample_power: 0
     proposal_scale: 1.0

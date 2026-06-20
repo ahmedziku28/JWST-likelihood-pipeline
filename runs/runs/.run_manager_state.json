@@ -574,7 +574,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29329",
-    "last_known_status": "QUEUED",
+    "last_known_status": "RUNNING",
     "submitted_at": "2026-06-18T18:26:01.705184"
   },
   "lcdm_uvlf_cmb_vbeta_full": {
@@ -602,7 +602,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29324",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-06-16T21:22:48.821588"
   },
   "lcdm_uvlf_fixed_full": {

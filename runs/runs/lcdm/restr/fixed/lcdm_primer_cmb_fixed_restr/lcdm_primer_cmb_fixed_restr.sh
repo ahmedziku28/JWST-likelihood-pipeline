@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=lcdm_primer_cmb_fixed_restr
 #SBATCH --nodes=1
-#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02,nut05
+#SBATCH --exclude=lustre,cernnode02,cernnode03,nut01,nut02
 #SBATCH --output=lcdm_primer_cmb_fixed_restr.log
 #SBATCH --error=lcdm_primer_cmb_fixed_restr.err
 #SBATCH --ntasks=8
