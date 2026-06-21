@@ -99,7 +99,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29319",
-    "last_known_status": "RUNNING",
+    "last_known_status": "ZOMBIE",
     "submitted_at": "2026-06-16T02:38:33.202296"
   },
   "exo_primer_bg_cmb_vbeta_restr": {
