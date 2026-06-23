@@ -14,7 +14,10 @@
     "submitted_at": "2026-06-01T13:59:24.791512"
   },
   "exo_ceers_bg_cmb_fixed_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "job_id": "29338",
+    "last_known_status": "RUNNING",
+    "submitted_at": "2026-06-23T10:49:38.364118"
   },
   "exo_ceers_bg_cmb_fixed_restr": {
     "last_known_status": "PENDING"
@@ -279,14 +282,14 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29317",
-    "last_known_status": "RUNNING",
+    "last_known_status": "FAILED",
     "submitted_at": "2026-06-14T14:41:20.111991"
   },
   "exo_uvlf_cmb_vshmr_restr": {
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29325",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-06-16T21:22:56.086873"
   },
   "exo_uvlf_fixed_full": {
