@@ -60,7 +60,11 @@
     "last_known_status": "PENDING"
   },
   "exo_ceers_cmb_fixed_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29361",
+    "last_known_status": "QUEUED",
+    "submitted_at": "2026-07-02T19:32:28.787629"
   },
   "exo_ceers_cmb_fixed_restr": {
     "last_known_status": "PENDING"
@@ -400,7 +404,11 @@
     "last_known_status": "PENDING"
   },
   "lcdm_ceers_cmb_fixed_full": {
-    "last_known_status": "PENDING"
+    "attempts": 1,
+    "auto_resubmit_attempts": 0,
+    "job_id": "29362",
+    "last_known_status": "QUEUED",
+    "submitted_at": "2026-07-02T19:32:37.915217"
   },
   "lcdm_ceers_cmb_fixed_restr": {
     "last_known_status": "PENDING"
