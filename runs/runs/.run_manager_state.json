@@ -63,7 +63,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29361",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-07-02T19:32:28.787629"
   },
   "exo_ceers_cmb_fixed_restr": {
@@ -282,7 +282,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29363",
-    "last_known_status": "QUEUED",
+    "last_known_status": "RUNNING",
     "submitted_at": "2026-07-08T09:14:12.207446"
   },
   "exo_uvlf_cmb_vbeta_restr": {
