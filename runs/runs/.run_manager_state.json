@@ -389,7 +389,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29419",
-    "last_known_status": "QUEUED",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-07-25T01:48:54.437713"
   },
   "lcdm_ceers_bg_fixed_restr": {
@@ -399,7 +399,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29420",
-    "last_known_status": "QUEUED",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-07-25T01:49:07.436719"
   },
   "lcdm_ceers_bg_vbeta_restr": {
@@ -490,7 +490,7 @@
     "attempts": 1,
     "auto_resubmit_attempts": 0,
     "job_id": "29417",
-    "last_known_status": "RUNNING",
+    "last_known_status": "CONVERGED",
     "submitted_at": "2026-07-25T01:48:06.896166"
   },
   "lcdm_primer_bg_fixed_restr": {
